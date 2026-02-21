@@ -1,0 +1,2 @@
+admin: admin@example.com pass: otp
+test: testuser@gmail.com pass:test123
