@@ -177,31 +177,18 @@ export default function PayMembership() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4">
-            <div className="max-w-lg w-full">
-                <div className="text-center mb-8">
-                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/30 mb-6">
-                        <CreditCard className="w-10 h-10 text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Membership Payment</h1>
-                    <p className="text-gray-500 dark:text-gray-400">
-                        Complete your payment to become an official community member and receive your <strong>Sabhasad ID</strong>.
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex py-12 items-center justify-center px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl w-full flex flex-col lg:flex-row items-center gap-8 lg:gap-12 xl:gap-16">
+                {/* Left Side - Information */}
+                <div className="w-full lg:w-1/2 text-center lg:text-left flex flex-col justify-center">
+                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">Membership Payment</h1>
+                    <p className="text-lg text-gray-500 dark:text-gray-400 mb-8">
+                        Complete your payment to become an official community member and receive your <strong className="text-gray-900 dark:text-white">Sabhasad ID</strong>.
                     </p>
-                </div>
-
-                <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-8">
-                    {/* Fee Details */}
-                    <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 mb-6 border border-blue-100 dark:border-blue-900/50">
-                        <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm text-gray-600 dark:text-gray-400">Community Membership Fee</span>
-                            <span className="text-2xl font-bold text-gray-900 dark:text-white">₹{fee}</span>
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">One-time payment • Lifetime membership</div>
-                    </div>
 
                     {/* Benefits */}
-                    <div className="space-y-3 mb-8">
-                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">What you'll get:</h3>
+                    <div className="space-y-4 text-left max-w-md mx-auto lg:mx-0">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">What you'll get:</h3>
                         {[
                             'Unique Sabhasad ID for community identification',
                             'Full access to the community dashboard',
@@ -209,43 +196,64 @@ export default function PayMembership() {
                             'Family tree registration & management',
                         ].map((benefit, idx) => (
                             <div key={idx} className="flex items-start gap-3">
-                                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                                <span className="text-sm text-gray-600 dark:text-gray-400">{benefit}</span>
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <span className="text-base text-gray-600 dark:text-gray-300">{benefit}</span>
                             </div>
                         ))}
                     </div>
-
-                    {/* Security Note */}
-                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-6 bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
-                        <Shield className="w-4 h-4 text-green-500 flex-shrink-0" />
-                        <span>Payments are securely processed through Razorpay. Your financial data is never stored.</span>
-                    </div>
-
-                    {/* Pay Button */}
-                    <Button
-                        onClick={handlePayment}
-                        disabled={loading}
-                        className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 transition-all"
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                                Processing...
-                            </>
-                        ) : (
-                            <>
-                                <CreditCard className="w-5 h-5 mr-2" />
-                                Pay ₹{fee} & Get Sabhasad ID
-                            </>
-                        )}
-                    </Button>
                 </div>
 
-                {/* Profile info */}
-                <div className="text-center mt-6">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Paying as <strong>{user?.full_name}</strong> ({user?.email})
-                    </p>
+                {/* Right Side - Payment Form */}
+                <div className="w-full lg:w-1/2 max-w-md mx-auto relative mt-8 lg:mt-0">
+                    {/* Decorative Elements */}
+                    <div className="hidden sm:block absolute -top-10 -right-10 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div className="hidden sm:block absolute -bottom-10 -left-10 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6 sm:p-8 relative z-10 w-full">
+                        {/* Fee Details */}
+                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 mb-8 border border-blue-100 dark:border-blue-900/50">
+                            <div className="flex items-center justify-between mb-4">
+                                <span className="text-base font-medium text-gray-600 dark:text-gray-400">Membership Fee</span>
+                                <span className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">₹{fee}</span>
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-2">
+                                <Award className="w-4 h-4" /> One-time payment • Lifetime validity
+                            </div>
+                        </div>
+
+                        {/* Security Note */}
+                        <div className="flex items-start gap-3 text-sm text-gray-500 dark:text-gray-400 mb-8 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                            <Shield className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <p>Payments are securely processed through Razorpay. Your financial data is protected and never stored on our servers.</p>
+                        </div>
+
+                        {/* Pay Button */}
+                        <Button
+                            onClick={handlePayment}
+                            disabled={loading}
+                            className="w-full py-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/30 transition-all rounded-xl h-14"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="w-6 h-6 animate-spin mr-3" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <CreditCard className="w-6 h-6 mr-3" />
+                                    Pay ₹{fee}
+                                </>
+                            )}
+                        </Button>
+
+                        {/* Profile info */}
+                        <div className="text-center mt-6 pt-6 border-t border-gray-100 dark:border-gray-700/50">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Paying as <strong className="text-gray-900 dark:text-white">{user?.full_name}</strong><br />
+                                <span className="text-xs">{user?.email}</span>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

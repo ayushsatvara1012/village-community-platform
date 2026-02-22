@@ -12,7 +12,7 @@ router = APIRouter(
 
 class MembershipApplication(BaseModel):
     village_id: int
-    phone_number: Optional[str] = None
+    address: Optional[str] = None
     profession: Optional[str] = None
 
 class AdminAction(BaseModel):
@@ -84,7 +84,7 @@ def apply_for_membership(
         raise HTTPException(status_code=404, detail="Village not found")
 
     current_user.village_id = application.village_id
-    current_user.phone_number = application.phone_number
+    current_user.address = application.address
     current_user.profession = application.profession
     current_user.status = "pending"
 

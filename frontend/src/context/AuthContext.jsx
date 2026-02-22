@@ -72,31 +72,6 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const googleLogin = async (idToken) => {
-        try {
-            const response = await fetch(`${API_URL}/auth/google`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ id_token: idToken }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Google sign-in failed');
-            }
-
-            const data = await response.json();
-            localStorage.setItem('village_app_token', data.access_token);
-            await checkUserLoggedIn();
-            return { success: true };
-        } catch (error) {
-            console.error("Google Login Error:", error);
-            throw error;
-        }
-    };
-
     const adminRequestOtp = async (email) => {
         try {
             const response = await fetch(`${API_URL}/auth/admin/request-otp`, {
@@ -144,23 +119,26 @@ export function AuthProvider({ children }) {
         }
     };
 
-    const register = async (name, email, password) => {
-        // First check if email is already taken before letting user proceed to Step 2
+    const register = async (name, phone, email, password) => {
+        // First check if email or phone is already taken before letting user proceed to Step 2
         try {
-            const checkResponse = await fetch(`${API_URL}/auth/check-email`, {
+            const checkResponse = await fetch(`${API_URL}/auth/check-duplicates`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ email: email, phone_number: phone }),
             });
             if (checkResponse.ok) {
                 const data = await checkResponse.json();
-                if (data.exists) {
-                    throw new Error("User already registered. Please sign in.");
+                if (data.email_exists) {
+                    throw new Error("Email already registered. Please sign in.");
+                }
+                if (data.phone_exists) {
+                    throw new Error("Phone number already registered.");
                 }
             }
         } catch (error) {
-            console.error("Email verification error:", error);
-            if (error.message === "User already registered. Please sign in.") {
+            console.error("Duplicate verification error:", error);
+            if (error.message === "Email already registered. Please sign in." || error.message === "Phone number already registered.") {
                 throw error;
             }
         }
@@ -170,7 +148,8 @@ export function AuthProvider({ children }) {
         const regData = {
             full_name: name,
             email: email,
-            password
+            password: password,
+            phone_number: phone
         };
         setPendingRegistration(regData);
         localStorage.setItem('pending_registration', JSON.stringify(regData));
@@ -197,6 +176,7 @@ export function AuthProvider({ children }) {
                     full_name: regData.full_name,
                     email: regData.email,
                     password: regData.password,
+                    phone_number: regData.phone_number,
                     village_id: applicationDetails.village_id
                 }),
             });
@@ -219,7 +199,7 @@ export function AuthProvider({ children }) {
                 },
                 body: JSON.stringify({
                     village_id: applicationDetails.village_id,
-                    phone_number: applicationDetails.phone,
+                    address: applicationDetails.address,
                     profession: applicationDetails.profession
                 }),
             });
@@ -260,7 +240,7 @@ export function AuthProvider({ children }) {
                 },
                 body: JSON.stringify({
                     village_id: details.village_id,
-                    phone_number: details.phone,
+                    address: details.address,
                     profession: details.profession
                 }),
             });
@@ -321,7 +301,6 @@ export function AuthProvider({ children }) {
     const value = {
         user,
         login,
-        googleLogin,
         adminRequestOtp,
         adminVerifyOtp,
         register,

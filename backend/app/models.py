@@ -19,7 +19,8 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False) # Primary login pre-payment
     hashed_password = Column(String)
     full_name = Column(String)
-    phone_number = Column(String, nullable=True)
+    phone_number = Column(String, unique=True, index=True, nullable=True)
+    address = Column(String, nullable=True)
     role = Column(String, default="user") # user, admin
     status = Column(String, default="pending") # pending, approved, member, rejected
     profession = Column(String, nullable=True)

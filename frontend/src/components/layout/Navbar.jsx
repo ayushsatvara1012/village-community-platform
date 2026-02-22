@@ -136,9 +136,8 @@ export function Navbar() {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
             <div
-                className={`md:hidden absolute w-full left-0 top-[64px] bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 flex flex-col overflow-hidden z-[100] ${isOpen ? 'max-h-[calc(100vh-64px)] opacity-100 border-b border-gray-200 dark:border-gray-800' : 'max-h-0 opacity-0 pointer-events-none'
+                className={`md:hidden absolute w-full left-0 top-[64px] bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 flex flex-col z-[100] ${isOpen ? 'max-h-[calc(100vh-64px)] opacity-100 border-b border-gray-200 dark:border-gray-800 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
                     }`}
             >
                 <div className="px-2 pt-2 pb-3 space-y-1">

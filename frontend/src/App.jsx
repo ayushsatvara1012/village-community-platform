@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -16,6 +17,26 @@ import PayMembership from './pages/PayMembership';
 import { AuthProvider } from './context/AuthContext';
 
 function App() {
+  useEffect(() => {
+    // Remove the initial loader from index.html once React mounts and window loaded
+    const hideLoader = () => {
+      const initialLoader = document.getElementById('initial-loader');
+      if (initialLoader) {
+        initialLoader.style.opacity = '0';
+        setTimeout(() => {
+          initialLoader.remove();
+        }, 500); // Wait for transition
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      hideLoader();
+    } else {
+      window.addEventListener('load', hideLoader);
+      return () => window.removeEventListener('load', hideLoader);
+    }
+  }, []);
+
   return (
     <AuthProvider>
       <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans">

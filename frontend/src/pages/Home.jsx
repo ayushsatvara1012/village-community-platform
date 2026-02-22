@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { Calendar, Megaphone, ArrowRight } from 'lucide-react';
+import { FullScreenLoader } from '../components/ui/FullScreenLoader';
 
 export default function Home() {
-    const [villageCount, setVillageCount] = useState(0);
-    const [memberCount, setMemberCount] = useState(0);
+    const [villageCount, setVillageCount] = useState(null);
+    const [memberCount, setMemberCount] = useState(null);
+    const [imagesLoaded, setImagesLoaded] = useState(false);
 
     useEffect(() => {
         fetch('http://localhost:8000/villages/')
@@ -18,12 +20,36 @@ export default function Home() {
             .then(res => res.json())
             .then(data => setMemberCount(data.length))
             .catch(err => console.error("Failed to fetch member count:", err));
+
+        // Wait for large header images to load to prevent visual pop-in
+        const imgUrls = [
+            'https://images.unsplash.com/photo-1497250681960-ef046c08a56e?q=80&w=2574&auto=format&fit=crop',
+            'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop'
+        ];
+
+        let loadedCount = 0;
+        const checkImages = () => {
+            loadedCount++;
+            if (loadedCount >= imgUrls.length) setImagesLoaded(true);
+        };
+
+        imgUrls.forEach(url => {
+            const img = new window.Image();
+            img.onload = checkImages;
+            img.onerror = checkImages;
+            img.src = url;
+        });
     }, []);
+
+    // Show full screen loader if primary counts haven't loaded or images are pulling
+    if (villageCount === null || memberCount === null || !imagesLoaded) {
+        return <FullScreenLoader />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
             {/* Hero Section */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 to-slate-900 text-white py-24 sm:py-32">
+            <div className="relative overflow-hidden bg-gradient-to-br from-blue-900 to-slate-900 text-white py-16 sm:py-24 md:py-32">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1497250681960-ef046c08a56e?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center opacity-20"></div>
                 <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
                     <motion.div

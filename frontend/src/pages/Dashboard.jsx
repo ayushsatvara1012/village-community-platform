@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/Button';
 import { DollarSign, Users, TrendingUp, Download, CheckCircle, XCircle, Clock, Loader2, MapPin, Plus, Trash2, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { FullScreenLoader } from '../components/ui/FullScreenLoader';
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -19,37 +20,54 @@ export default function Dashboard() {
     const [addingVillage, setAddingVillage] = useState(false);
     const [deletingVillageId, setDeletingVillageId] = useState(null);
 
+    // Loading states for FullScreenLoader
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [isLoadingVillages, setIsLoadingVillages] = useState(true);
+    const [isLoadingMembers, setIsLoadingMembers] = useState(true);
+    const [isLoadingChart, setIsLoadingChart] = useState(true);
+    const [isLoadingPending, setIsLoadingPending] = useState(true);
+
     const token = localStorage.getItem('village_app_token');
 
     const fetchVillages = () => {
+        setIsLoadingVillages(true);
         fetch('http://localhost:8000/villages/')
             .then(res => res.json())
             .then(data => {
                 setVillages(data);
                 setVillageCount(data.length);
             })
-            .catch(err => console.error("Failed to fetch villages:", err));
+            .catch(err => console.error("Failed to fetch villages:", err))
+            .finally(() => setIsLoadingVillages(false));
     };
 
     const fetchMembers = () => {
+        setIsLoadingMembers(true);
         if (token) {
             fetch('http://localhost:8000/members/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.ok ? res.json() : [])
                 .then(data => setMemberCount(Array.isArray(data) ? data.length : 0))
-                .catch(() => setMemberCount(0));
+                .catch(() => setMemberCount(0))
+                .finally(() => setIsLoadingMembers(false));
+        } else {
+            setIsLoadingMembers(false);
         }
     };
 
     const fetchPending = () => {
+        setIsLoadingPending(true);
         if (token) {
             fetch('http://localhost:8000/members/pending', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.ok ? res.json() : [])
                 .then(data => setPendingMembers(Array.isArray(data) ? data : []))
-                .catch(() => setPendingMembers([]));
+                .catch(() => setPendingMembers([]))
+                .finally(() => setIsLoadingPending(false));
+        } else {
+            setIsLoadingPending(false);
         }
     };
 
@@ -57,11 +75,14 @@ export default function Dashboard() {
         fetchVillages();
         fetchMembers();
 
+        setIsLoadingStats(true);
         fetch('http://localhost:8000/payments/stats')
             .then(res => res.json())
             .then(data => setStats(data))
-            .catch(err => console.error("Failed to fetch stats:", err));
+            .catch(err => console.error("Failed to fetch stats:", err))
+            .finally(() => setIsLoadingStats(false));
 
+        setIsLoadingChart(true);
         fetch('http://localhost:8000/payments/history')
             .then(res => res.json())
             .then(data => {
@@ -71,10 +92,15 @@ export default function Dashboard() {
                 }));
                 setChartData(chart);
             })
-            .catch(err => console.error("Failed to fetch payments:", err));
+            .catch(err => console.error("Failed to fetch payments:", err))
+            .finally(() => setIsLoadingChart(false));
 
         fetchPending();
     }, []);
+
+    if (isLoadingStats || isLoadingVillages || isLoadingMembers || isLoadingChart || isLoadingPending) {
+        return <FullScreenLoader message="Loading dashboard data..." />;
+    }
 
     const handleApprove = async (memberId) => {
         setActionId(memberId);
@@ -202,8 +228,10 @@ export default function Dashboard() {
                             <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" />
                         </div>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">₹{stats.total_collection.toLocaleString()}</p>
-                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        ₹{stats.total_collection.toLocaleString()}
+                        <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">Live</span>
+                    </p>
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -227,12 +255,11 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Charts & Admin Panels */}
-            <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-8`}>
+            <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6 sm:gap-8`}>
                 {/* Chart */}
-                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700`}>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Recent Donations Trend</h3>
-                    <div className="h-80 w-full">
+                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700`}>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Recent Donations Trend</h3>
+                    <div className="h-64 sm:h-80 w-full">
                         {chartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
@@ -260,7 +287,7 @@ export default function Dashboard() {
                                 {pendingMembers.length}
                             </span>
                         </div>
-                        <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
                             {pendingMembers.length > 0 ? (
                                 pendingMembers.map((member) => (
                                     <div key={member.id} className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -324,10 +351,10 @@ export default function Dashboard() {
                                                 </div>
 
                                                 {/* Action buttons */}
-                                                <div className="flex gap-2">
+                                                <div className="flex flex-col sm:flex-row gap-2">
                                                     <Button
                                                         size="sm"
-                                                        className="flex-1 bg-green-600 hover:bg-green-700 gap-1"
+                                                        className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 gap-1 justify-center"
                                                         onClick={() => handleApprove(member.id)}
                                                         disabled={actionId === member.id}
                                                     >
@@ -336,7 +363,7 @@ export default function Dashboard() {
                                                     </Button>
                                                     <Button
                                                         size="sm"
-                                                        className="flex-1 bg-red-600 hover:bg-red-700 gap-1"
+                                                        className="w-full sm:flex-1 bg-red-600 hover:bg-red-700 gap-1 justify-center"
                                                         onClick={() => handleReject(member.id)}
                                                         disabled={actionId === member.id}
                                                     >
@@ -368,25 +395,25 @@ export default function Dashboard() {
                     </div>
 
                     {/* Add Village Form */}
-                    <div className="flex flex-col sm:flex-row gap-3 mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
                         <input
                             type="text"
                             placeholder="Village Name"
                             value={newVillage.name}
                             onChange={(e) => setNewVillage(prev => ({ ...prev, name: e.target.value }))}
-                            className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
+                            className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
                         />
                         <input
                             type="text"
                             placeholder="District"
                             value={newVillage.district}
                             onChange={(e) => setNewVillage(prev => ({ ...prev, district: e.target.value }))}
-                            className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
+                            className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
                         />
                         <Button
                             onClick={handleAddVillage}
                             disabled={addingVillage || !newVillage.name || !newVillage.district}
-                            className="gap-1 bg-green-600 hover:bg-green-700 whitespace-nowrap"
+                            className="gap-1 bg-green-600 hover:bg-green-700 whitespace-nowrap justify-center py-2.5 sm:py-2"
                         >
                             {addingVillage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
                             Add Village

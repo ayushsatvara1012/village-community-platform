@@ -5,13 +5,75 @@
     <link rel="icon" type="image/png" href="../frontend/src/assets/v-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>સતવારા ૩૨ સમાજ</title>
+    <style>
+      body {
+        background-color: #242424;
+        margin: 0;
+        height: 100vh;
+      }
+      @media (prefers-color-scheme: light) {
+        body {
+          background-color: #f9fafb; /* gray-50 */
+        }
+      }
+      /* Initial Root Loader CSS */
+      #initial-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: inherit;
+        opacity: 1;
+        transition: opacity 0.4s ease-out;
+        will-change: opacity; /* Smooth fadeout */
+      }
+      .loader {
+        width: 50px;
+        aspect-ratio: 1;
+        display: grid;
+        contain: strict; /* High performance layout boundary */
+      }
+      .loader::before,
+      .loader::after {    
+        content: "";
+        grid-area: 1/1;
+        --c: no-repeat radial-gradient(farthest-side, #25b09b 92%, #0000);
+        background: 
+          var(--c) 50% 0, 
+          var(--c) 50% 100%, 
+          var(--c) 100% 50%, 
+          var(--c) 0 50%;
+        background-size: 12px 12px;
+        will-change: transform;
+        animation: spin-outer 1s infinite ease-in-out;
+      }
+      .loader::before {
+        --c: no-repeat radial-gradient(farthest-side, #1a7c6d 92%, #0000); /* Removed heavy hue-rotate filter */
+        background-size: 10px 10px; /* Scaled down slightly representing the inner ring */
+        animation: spin-inner 1s infinite linear;
+      }
+
+      /* Hardware Accelerated Transforms */
+      @keyframes spin-outer { 
+        0% { transform: translate3d(0,0,0) scale(1) rotate(0turn); }
+        100% { transform: translate3d(0,0,0) scale(1) rotate(0.5turn); }
+      }
+      @keyframes spin-inner { 
+        0% { transform: translate3d(0,0,0) scale(0.8) rotate(0turn); }
+        100% { transform: translate3d(0,0,0) scale(0.8) rotate(0.5turn); }
+      }
+    </style>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gujarati:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   </head>
   <body>
+    <div id="initial-loader">
+      <div class="loader"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

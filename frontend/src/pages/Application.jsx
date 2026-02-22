@@ -12,7 +12,7 @@ export default function Application() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         village_id: '',
-        phone: '',
+        address: '',
         profession: '',
     });
     const [isProcessing, setIsProcessing] = useState(false);
@@ -58,14 +58,14 @@ export default function Application() {
                 // Fresh registration — register + apply atomically
                 await registerAndApply({
                     village_id: formData.village_id,
-                    phone: formData.phone,
+                    address: formData.address,
                     profession: formData.profession,
                 });
             } else {
                 // Already registered user re-applying
                 await applyForMembership({
                     village_id: formData.village_id,
-                    phone: formData.phone,
+                    address: formData.address,
                     profession: formData.profession,
                 });
             }
@@ -118,7 +118,7 @@ export default function Application() {
                     </div>
                 )}
 
-                <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-8">
+                <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-5 sm:p-8">
                     <AnimatePresence mode="wait">
 
                         {/* Step 1: Village Selection */}
@@ -128,7 +128,7 @@ export default function Application() {
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Select Your Village</h2>
                                     <p className="text-gray-500 dark:text-gray-400">Where are you from?</p>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-h-[60vh] sm:max-h-96 overflow-y-auto pr-2">
                                     {villages.map((village) => (
                                         <button
                                             key={village.id}
@@ -161,10 +161,10 @@ export default function Application() {
                                 </div>
                                 <div className="space-y-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number *</label>
-                                        <input type="tel" value={formData.phone} onChange={(e) => updateFormData('phone', e.target.value)}
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Address *</label>
+                                        <input type="text" value={formData.address || ''} onChange={(e) => updateFormData('address', e.target.value)}
                                             className="w-full px-4 py-3 rounded-lg bg-white/50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
-                                            placeholder="+91 98765 43210"
+                                            placeholder="e.g. 123 Main St, City"
                                         />
                                     </div>
                                     <div>
@@ -177,7 +177,7 @@ export default function Application() {
                                 </div>
                                 <div className="flex justify-between pt-6">
                                     <Button variant="outline" onClick={prevStep}>Back</Button>
-                                    <Button onClick={nextStep} disabled={!formData.phone || !formData.profession}>Continue</Button>
+                                    <Button onClick={nextStep} disabled={!formData.address || !formData.profession}>Continue</Button>
                                 </div>
                             </motion.div>
                         )}
@@ -195,7 +195,7 @@ export default function Application() {
                                         <div className="flex justify-between"><span className="text-gray-500">Name</span><span className="font-medium">{user?.full_name || pendingRegistration?.full_name}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="font-medium">{user?.email || pendingRegistration?.email}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Village</span><span className="font-medium">{villages.find(v => v.id === formData.village_id)?.name}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Phone</span><span className="font-medium">{formData.phone}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Address</span><span className="font-medium">{formData.address}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Profession</span><span className="font-medium">{formData.profession}</span></div>
                                     </div>
                                 </div>

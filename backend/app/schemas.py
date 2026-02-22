@@ -19,6 +19,7 @@ class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     phone_number: Optional[str] = None
+    address: Optional[str] = None
     village_id: Optional[int] = None
     profession: Optional[str] = None
 
@@ -117,4 +118,13 @@ class FamilyMemberTree(BaseModel):
 
     class Config:
         from_attributes = True
+
+# ─── User OTP Login Schemas ─────────────────────
+
+class UserOtpRequest(BaseModel):
+    identifier: str # Email or Phone Number
+
+class UserOtpVerify(BaseModel):
+    identifier: str # Email or Phone Number
+    otp: str
 

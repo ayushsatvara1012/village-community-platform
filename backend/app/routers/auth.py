@@ -6,10 +6,7 @@ from typing import Annotated
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
-from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
 from .. import models, schemas, database
-from ..config import GOOGLE_CLIENT_ID
 from ..email_utils import send_otp_email
 import os
 import random
@@ -71,9 +68,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
-    db_email = db.query(models.User).filter(models.User.email == user.email).first()
-    if db_email:
-        raise HTTPException(status_code=400, detail="User already registered. Please sign in.")
+    # Check for duplicate email
+    if db.query(models.User).filter(models.User.email == user.email).first():
+        raise HTTPException(status_code=400, detail="Email already registered.")
+        
+    # Check for duplicate phone number
+    if user.phone_number and db.query(models.User).filter(models.User.phone_number == user.phone_number).first():
+        raise HTTPException(status_code=400, detail="Phone number already registered.")
 
     hashed_password = get_password_hash(user.password)
     new_user = models.User(
@@ -100,7 +101,8 @@ def login_for_access_token(
     user = db.query(models.User).filter(
         or_(
             models.User.email == form_data.username,
-            models.User.sabhasad_id == form_data.username
+            models.User.sabhasad_id == form_data.username,
+            models.User.phone_number == form_data.username
         )
     ).first()
     
@@ -127,33 +129,82 @@ def login_for_access_token(
 async def read_users_me(current_user: Annotated[models.User, Depends(get_current_user)]):
     return current_user
 
-# ─── Google Sign-In ────────────────────────────────────────────
 
-class GoogleLoginRequest(BaseModel):
-    id_token: str
+# ─── User OTP Login ──────────────────────────────────────────
 
-@router.post("/google", response_model=schemas.Token)
-def google_login(request: GoogleLoginRequest, db: Session = Depends(database.get_db)):
-    """Sign in with Google. Only existing registered users can sign in."""
-    try:
-        idinfo = id_token.verify_oauth2_token(
-            request.id_token,
-            google_requests.Request(),
-            GOOGLE_CLIENT_ID
+# ─── Pre-Registration Validation ────────────────────────────────
+
+class CheckDuplicatesRequest(BaseModel):
+    email: EmailStr
+    phone_number: str
+
+@router.post("/check-duplicates")
+def check_duplicates(request: CheckDuplicatesRequest, db: Session = Depends(database.get_db)):
+    """Check if email or phone number is already registered."""
+    email_exists = db.query(models.User).filter(models.User.email == request.email).first() is not None
+    phone_exists = db.query(models.User).filter(models.User.phone_number == request.phone_number).first() is not None
+    
+    return {
+        "email_exists": email_exists,
+        "phone_exists": phone_exists
+@router.post("/request-otp")
+def user_request_otp(request: schemas.UserOtpRequest, db: Session = Depends(database.get_db)):
+    """Request an OTP for user login. OTP is printed to the server console or emailed."""
+    from sqlalchemy import or_
+    user = db.query(models.User).filter(
+        or_(
+            models.User.email == request.identifier,
+            models.User.phone_number == request.identifier
         )
-        email = idinfo.get("email")
-        if not email:
-            raise HTTPException(status_code=400, detail="Google account has no email")
-    except ValueError as e:
-        raise HTTPException(status_code=401, detail=f"Invalid Google token: {str(e)}")
-
-    # Only allow existing users — no auto-registration
-    user = db.query(models.User).filter(models.User.email == email).first()
+    ).first()
+    
     if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="User not registered. Please register first and then sign in with Google."
+        raise HTTPException(status_code=404, detail="User not found. Please register first.")
+
+    # Generate 6-digit OTP
+    otp = str(random.randint(100000, 999999))
+    otp_store[request.identifier] = {
+        "otp": otp,
+        "expires": time.time() + 300  # 5 minutes
+    }
+
+    # If identifier is an email, try sending email
+    if "@" in request.identifier:
+        email_sent = send_otp_email(request.identifier, otp)
+        if email_sent:
+            return {"message": "OTP sent to your email. Please check your inbox."}
+            
+    # Fallback to console print for SMS/Email failures or phone numbers
+    print(f"\n{'='*40}\n[DEV LOG] OTP for {request.identifier}: {otp}\n{'='*40}\n", flush=True)
+    return {"message": "OTP generated successfully. (Check server console in DEV mode)"}
+
+@router.post("/verify-otp", response_model=schemas.Token)
+def user_verify_otp(request: schemas.UserOtpVerify, db: Session = Depends(database.get_db)):
+    """Verify the OTP and issue a JWT token for user login."""
+    stored = otp_store.get(request.identifier)
+    if not stored:
+        raise HTTPException(status_code=400, detail="No OTP requested for this identifier. Please request a new OTP.")
+
+    if time.time() > stored["expires"]:
+        del otp_store[request.identifier]
+        raise HTTPException(status_code=400, detail="OTP has expired. Please request a new one.")
+
+    if stored["otp"] != request.otp:
+        raise HTTPException(status_code=401, detail="Invalid OTP. Please try again.")
+
+    # OTP is valid — clean up and issue token
+    del otp_store[request.identifier]
+    
+    from sqlalchemy import or_
+    user = db.query(models.User).filter(
+        or_(
+            models.User.email == request.identifier,
+            models.User.phone_number == request.identifier
         )
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
