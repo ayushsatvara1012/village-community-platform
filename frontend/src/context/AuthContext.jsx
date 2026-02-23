@@ -43,10 +43,11 @@ export function AuthProvider({ children }) {
         setLoading(false);
     };
 
-    const login = async (username, password) => {
+    const login = async (username, password, rememberMe = false) => {
         const formData = new URLSearchParams();
         formData.append('username', username); // This acts as the email or sabhasad_id field
         formData.append('password', password);
+        formData.append('remember_me', rememberMe);
 
         try {
             const response = await fetch(`${API_URL}/auth/token`, {
@@ -102,6 +103,53 @@ export function AuthProvider({ children }) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ email, otp }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'OTP verification failed');
+            }
+
+            const data = await response.json();
+            localStorage.setItem('village_app_token', data.access_token);
+            await checkUserLoggedIn();
+            return { success: true };
+        } catch (error) {
+            console.error("OTP Verify Error:", error);
+            throw error;
+        }
+    };
+
+    const requestUserOtp = async (identifier) => {
+        try {
+            const response = await fetch(`${API_URL}/auth/request-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ identifier }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || 'Failed to send OTP');
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("OTP Request Error:", error);
+            throw error;
+        }
+    };
+
+    const verifyUserOtp = async (identifier, otp, rememberMe = false) => {
+        try {
+            const response = await fetch(`${API_URL}/auth/verify-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ identifier, otp, remember_me: rememberMe }),
             });
 
             if (!response.ok) {
@@ -301,6 +349,8 @@ export function AuthProvider({ children }) {
     const value = {
         user,
         login,
+        requestUserOtp,
+        verifyUserOtp,
         adminRequestOtp,
         adminVerifyOtp,
         register,

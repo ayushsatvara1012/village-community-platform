@@ -127,4 +127,5 @@ class UserOtpRequest(BaseModel):
 class UserOtpVerify(BaseModel):
     identifier: str # Email or Phone Number
     otp: str
+    remember_me: Optional[bool] = False
 

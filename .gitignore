@@ -29,6 +29,13 @@ __pycache__/
 *$py.class
 venv/
 env/
-.env
-.venv
 *.sqlite3
+*.db
+*.sqlite
+
+# Secrets
+.env
+*.json
+!package.json
+!tsconfig.json
+!composer.json

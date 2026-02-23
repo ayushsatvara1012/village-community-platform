@@ -206,7 +206,7 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="px-4 sm:px-6 lg:px-8 py-8">
             <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
@@ -255,11 +255,11 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-3' : 'lg:grid-cols-1'} gap-6 sm:gap-8`}>
+            <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-5' : 'lg:grid-cols-1'} gap-6 sm:gap-8`}>
                 {/* Chart */}
-                <div className={`${user?.role === 'admin' ? 'lg:col-span-2' : ''} bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700`}>
+                <div className={`${user?.role === 'admin' ? 'lg:col-span-3' : ''} min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col`}>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Recent Donations Trend</h3>
-                    <div className="h-64 sm:h-80 w-full">
+                    <div className="h-64 sm:h-80 w-full flex-1 min-h-0">
                         {chartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
                                 <BarChart data={chartData}>
@@ -280,7 +280,7 @@ export default function Dashboard() {
 
                 {/* Pending Requests — Admin Only */}
                 {user?.role === 'admin' && (
-                    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                    <div className="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 min-w-0 flex flex-col h-full max-h-[600px]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Pending Requests</h3>
                             <span className="text-sm bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full font-medium">

@@ -10,14 +10,24 @@ export default function Login() {
         password: '',
         otp: ''
     });
-    const [loginMethod, setLoginMethod] = useState('otp'); // 'otp' or 'password'
+    const [loginMethod, setLoginMethod] = useState('password'); // 'otp' or 'password'
     const [otpSent, setOtpSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [successMsg, setSuccessMsg] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const { login, requestUserOtp, verifyUserOtp } = useAuth();
     const navigate = useNavigate();
+
+    // Pre-fill identifier from localStorage if it exists
+    useEffect(() => {
+        const savedIdentifier = localStorage.getItem('remembered_identifier');
+        if (savedIdentifier) {
+            setFormData(prev => ({ ...prev, identifier: savedIdentifier }));
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -54,7 +64,12 @@ export default function Login() {
         setIsLoading(true);
         try {
             if (loginMethod === 'password') {
-                await login(formData.identifier, formData.password);
+                await login(formData.identifier, formData.password, rememberMe);
+                if (rememberMe) {
+                    localStorage.setItem('remembered_identifier', formData.identifier);
+                } else {
+                    localStorage.removeItem('remembered_identifier');
+                }
                 navigate('/dashboard');
             } else if (loginMethod === 'otp') {
                 if (!otpSent) {
@@ -65,7 +80,12 @@ export default function Login() {
                         setIsLoading(false);
                         return;
                     }
-                    await verifyUserOtp(formData.identifier, formData.otp);
+                    await verifyUserOtp(formData.identifier, formData.otp, rememberMe);
+                    if (rememberMe) {
+                        localStorage.setItem('remembered_identifier', formData.identifier);
+                    } else {
+                        localStorage.removeItem('remembered_identifier');
+                    }
                     navigate('/dashboard');
                 }
             }
@@ -185,7 +205,12 @@ export default function Login() {
 
                         <div className="flex items-center justify-between text-sm">
                             <label className="flex items-center text-gray-600 dark:text-gray-400 cursor-pointer">
-                                <input type="checkbox" className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                <input
+                                    type="checkbox"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                    className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                />
                                 Remember me
                             </label>
                             {loginMethod === 'password' && (

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -21,6 +21,7 @@ router = APIRouter(
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_DAYS = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
@@ -94,6 +95,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
 @router.post("/token", response_model=schemas.Token)
 def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    remember_me: bool = Form(False),
     db: Session = Depends(database.get_db)
 ):
     # Retrieve user by email or sabhasad_id
@@ -119,7 +121,11 @@ def login_for_access_token(
             detail="Incorrect password. Please try again.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    if remember_me:
+        access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    else:
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
@@ -147,6 +153,8 @@ def check_duplicates(request: CheckDuplicatesRequest, db: Session = Depends(data
     return {
         "email_exists": email_exists,
         "phone_exists": phone_exists
+    }
+
 @router.post("/request-otp")
 def user_request_otp(request: schemas.UserOtpRequest, db: Session = Depends(database.get_db)):
     """Request an OTP for user login. OTP is printed to the server console or emailed."""
@@ -202,11 +210,12 @@ def user_verify_otp(request: schemas.UserOtpVerify, db: Session = Depends(databa
             models.User.phone_number == request.identifier
         )
     ).first()
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
 
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    if request.remember_me:
+        access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    else:
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
