@@ -39,3 +39,4 @@ env/
 !package.json
 !tsconfig.json
 !composer.json
+backend/*.json
