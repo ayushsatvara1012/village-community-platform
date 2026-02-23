@@ -17,10 +17,10 @@ export default function Members() {
         try {
             const token = localStorage.getItem('village_app_token');
             const [membersRes, villagesRes] = await Promise.all([
-                fetch('http://localhost:8000/members/', {
+                fetch('http://127.0.0.1:8000/members/', {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 }),
-                fetch('http://localhost:8000/villages/')
+                fetch('http://127.0.0.1:8000/villages/')
             ]);
 
             if (membersRes.ok && villagesRes.ok) {

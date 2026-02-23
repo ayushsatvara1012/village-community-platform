@@ -1,5 +1,8 @@
 import os
+from dotenv import load_dotenv
 import razorpay
+
+load_dotenv()
 
 # Razorpay Configuration
 # Replace these with your own keys from https://dashboard.razorpay.com

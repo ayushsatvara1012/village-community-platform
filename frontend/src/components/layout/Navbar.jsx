@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../ui/Button';
-import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard } from 'lucide-react';
+import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,16 +11,19 @@ export function Navbar() {
 
     // Build nav links based on auth status
     const getNavLinks = () => {
-        const links = [{ name: 'Home', path: '/', icon: Home }];
+        const links = [
+            { name: 'Home', path: '/', icon: Home },
+            { name: 'Villages', path: '/villages', icon: MapPin }
+        ];
 
         if (!isAuthenticated) {
-            // Anonymous: Home + Donate only
+            // Anonymous: Home + Villages + Donate only
             links.push({ name: 'Donate', path: '/donate', icon: Heart });
         } else if (user?.status === 'pending') {
-            // Pending: Home + Check Status
+            // Pending: Home + Villages + Check Status
             links.push({ name: 'Application Status', path: '/apply', icon: ClipboardCheck });
         } else if (user?.status === 'approved') {
-            // Approved: Home + Members + Donate + Pay Membership
+            // Approved: Home + Villages + Members + Donate + Pay Membership
             links.push({ name: 'Members', path: '/members', icon: Users });
             links.push({ name: 'Donate', path: '/donate', icon: Heart });
             links.push({ name: 'Pay Membership', path: '/pay', icon: CreditCard });
@@ -68,7 +71,7 @@ export function Navbar() {
                             <Link
                                 key={link.name}
                                 to={link.path}
-                                className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors ${isActive(link.path)
+                                className={`inline-flex items-center px-1 text-sm font-medium transition-colors ${isActive(link.path)
                                     ? 'text-blue-600 dark:text-blue-400'
                                     : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
                                     }`}
@@ -93,19 +96,12 @@ export function Navbar() {
                                     )}
 
                                     {/* Profile link */}
-                                    {(user?.status === 'approved' || user?.status === 'member' || user?.role === 'admin') && (
-                                        <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                                            <img src={getAvatarUrl()} alt={getUserDisplayName()} className="w-8 h-8 rounded-full bg-gray-200" />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">{getUserDisplayName()}</span>
-                                        </Link>
-                                    )}
 
                                     {/* Dashboard button — only for members/admin */}
                                     {(user?.status === 'member' || user?.role === 'admin') && (
                                         <Link to="/dashboard">
                                             <Button variant="outline" size="sm">
-                                                <LayoutDashboard className="w-4 h-4 mr-2" />
-                                                Dashboard
+                                                <LayoutDashboard className="w-4 h-4" />
                                             </Button>
                                         </Link>
                                     )}
@@ -113,6 +109,12 @@ export function Navbar() {
                                     <Button size="sm" variant="ghost" onClick={logout} title="Logout">
                                         <LogOut className="w-4 h-4" />
                                     </Button>
+                                    {(user?.status === 'approved' || user?.status === 'member' || user?.role === 'admin') && (
+                                        <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                            <img src={getAvatarUrl()} alt={getUserDisplayName()} className="w-8 h-8 rounded-full bg-gray-200" />
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">{getUserDisplayName()}</span>
+                                        </Link>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2">
@@ -174,13 +176,12 @@ export function Navbar() {
                                 {(user?.status === 'member' || user?.role === 'admin') && (
                                     <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-3 py-2">
                                         <Button variant="outline" className="w-full justify-start">
-                                            <LayoutDashboard className="w-4 h-4 mr-2" />
-                                            Dashboard
+                                            <LayoutDashboard className="w-4 h-4" />
                                         </Button>
                                     </Link>
                                 )}
                                 <div className="px-3 py-2">
-                                    <Button variant="ghost" className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50" onClick={logout}>
+                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={logout}>
                                         <LogOut className="w-4 h-4 mr-2" />
                                         Logout
                                     </Button>

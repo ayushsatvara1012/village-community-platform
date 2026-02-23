@@ -14,6 +14,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Village Community API", lifespan=lifespan)
 
+import traceback
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    with open("trace.log", "w") as f:
+        f.write(traceback.format_exc())
+    return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+
 # CORS Configuration
 origins = [
     "http://localhost:5173",

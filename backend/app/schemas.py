@@ -48,7 +48,8 @@ class TokenData(BaseModel):
 
 class PaymentBase(BaseModel):
     amount: float
-    transaction_id: str
+    transaction_id: Optional[str] = None
+    purpose: str = "general"
 
 class PaymentCreate(PaymentBase):
     pass
@@ -57,10 +58,18 @@ class Payment(PaymentBase):
     id: int
     user_id: int
     status: str
+    purpose: Optional[str] = "general"
     created_at: datetime
     
     class Config:
         from_attributes = True
+
+class DashboardDonationResponse(BaseModel):
+    id: int
+    amount: float
+    purpose: Optional[str] = "general"
+    created_at: datetime
+    donor_name: Optional[str] = None
 
 class DonationEventBase(BaseModel):
     title: str

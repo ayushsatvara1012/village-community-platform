@@ -14,7 +14,7 @@ export default function Donate() {
     const [error, setError] = useState('');
     const { user } = useAuth();
 
-    const API_URL = 'http://localhost:8000';
+    const API_URL = 'http://127.0.0.1:8000';
 
     useEffect(() => {
         fetch(`${API_URL}/events/`)

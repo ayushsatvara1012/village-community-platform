@@ -32,7 +32,7 @@ export default function Application() {
     useEffect(() => {
         const fetchVillages = async () => {
             try {
-                const response = await fetch('http://localhost:8000/villages/');
+                const response = await fetch('http://127.0.0.1:8000/villages/');
                 if (response.ok) {
                     const data = await response.json();
                     setVillages(data);

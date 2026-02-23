@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, Date, Integer
 from typing import List, Annotated
 from pydantic import BaseModel
 from .. import models, schemas, database
@@ -17,12 +17,14 @@ MEMBERSHIP_FEE = 500  # ₹500 membership fee
 
 class CreateOrderRequest(BaseModel):
     amount: float
+    purpose: str = "general"
 
 class VerifyPaymentRequest(BaseModel):
     razorpay_payment_id: str
     razorpay_order_id: str
     razorpay_signature: str
     amount: float
+    purpose: str = "general"
 
 def generate_sabhasad_id(db: Session) -> str:
     """Generate next sequential Sabhasad ID like SAB-0001, SAB-0002, etc."""
@@ -145,6 +147,7 @@ def create_order(
             "receipt": f"PAY-{uuid.uuid4().hex[:8]}",
             "notes": {
                 "user_id": str(current_user.id),
+                "purpose": order.purpose
             }
         }
         razorpay_order = razorpay_client.order.create(data=order_data)
@@ -155,6 +158,7 @@ def create_order(
         "order_id": razorpay_order["id"],
         "amount": order.amount,
         "currency": "INR",
+        "purpose": order.purpose,
         "razorpay_key_id": RAZORPAY_KEY_ID,
     }
 
@@ -178,12 +182,67 @@ def verify_payment(
         user_id=current_user.id,
         amount=payment.amount,
         transaction_id=payment.razorpay_payment_id,
-        status="completed"
+        status="completed",
+        purpose=payment.purpose
     )
     db.add(db_payment)
     db.commit()
     db.refresh(db_payment)
     return db_payment
+
+from typing import Optional
+from datetime import date
+
+@router.get("/recent-donations", response_model=List[schemas.DashboardDonationResponse])
+def get_recent_donations(
+    db: Session = Depends(database.get_db),
+    limit: int = 10,
+    offset: int = 0,
+    sort_by: str = "date",
+    order: str = "desc",
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None
+):
+    query = (
+        db.query(
+            models.Payment.id,
+            models.Payment.amount,
+            models.Payment.purpose,
+            models.Payment.created_at,
+            models.User.full_name.label("donor_name")
+        )
+        .join(models.User, models.User.id == models.Payment.user_id)
+    )
+
+    if start_date:
+        query = query.filter(models.Payment.created_at >= start_date)
+    if end_date:
+        # Cast to date to include the whole day
+        query = query.filter(func.cast(models.Payment.created_at, Date) <= end_date)
+
+    if sort_by == "amount":
+        if order == "asc":
+            query = query.order_by(models.Payment.amount.asc())
+        else:
+            query = query.order_by(models.Payment.amount.desc())
+    else:  # default to date
+        if order == "asc":
+            query = query.order_by(models.Payment.created_at.asc())
+        else:
+            query = query.order_by(models.Payment.created_at.desc())
+
+    donations = query.limit(limit).offset(offset).all()
+    
+    # SQLAlchemy row objects need to be converted to dicts to match schema
+    return [
+        {
+            "id": d.id,
+            "amount": d.amount,
+            "purpose": d.purpose,
+            "created_at": d.created_at,
+            "donor_name": d.donor_name
+        } for d in donations
+    ]
 
 @router.get("/history", response_model=List[schemas.Payment])
 def payment_history(db: Session = Depends(database.get_db)):
@@ -210,3 +269,35 @@ def payment_stats(db: Session = Depends(database.get_db)):
         "top_donor": top_donor_query[0] if top_donor_query else "N/A",
         "top_donor_amount": float(top_donor_query[1]) if top_donor_query else 0
     }
+
+class ChartDataResponse(BaseModel):
+    date: str
+    amount: float
+
+@router.get("/chart", response_model=List[ChartDataResponse])
+def get_chart_data(
+    db: Session = Depends(database.get_db),
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    month: Optional[int] = None,
+    year: Optional[int] = None
+):
+    """Get aggregated payment data by date for the dashboard chart."""
+    query = db.query(
+        func.cast(models.Payment.created_at, Date).label("date"),
+        func.sum(models.Payment.amount).label("total_amount")
+    ).filter(models.Payment.status == "completed")
+
+    if start_date:
+        query = query.filter(func.cast(models.Payment.created_at, Date) >= start_date)
+    if end_date:
+        query = query.filter(func.cast(models.Payment.created_at, Date) <= end_date)
+    
+    if year:
+        query = query.filter(func.extract('year', models.Payment.created_at) == year)
+    if month:
+        query = query.filter(func.extract('month', models.Payment.created_at) == month)
+
+    results = query.group_by("date").order_by("date").all()
+
+    return [{"date": str(r.date), "amount": float(r.total_amount)} for r in results]

@@ -11,12 +11,12 @@ export default function Home() {
     const [imagesLoaded, setImagesLoaded] = useState(false);
 
     useEffect(() => {
-        fetch('http://localhost:8000/villages/')
+        fetch('http://127.0.0.1:8000/villages/')
             .then(res => res.json())
             .then(data => setVillageCount(data.length))
             .catch(err => console.error("Failed to fetch village count:", err));
 
-        fetch('http://localhost:8000/members/')
+        fetch('http://127.0.0.1:8000/members/')
             .then(res => res.json())
             .then(data => setMemberCount(data.length))
             .catch(err => console.error("Failed to fetch member count:", err));

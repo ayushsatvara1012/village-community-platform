@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [pendingRegistration, setPendingRegistration] = useState(null);
     const navigate = useNavigate();
-    const API_URL = 'http://localhost:8000';
+    const API_URL = 'http://127.0.0.1:8000';
 
     useEffect(() => {
         checkUserLoggedIn();

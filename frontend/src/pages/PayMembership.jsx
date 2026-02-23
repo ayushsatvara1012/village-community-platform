@@ -16,7 +16,7 @@ export default function PayMembership() {
 
     useEffect(() => {
         // Fetch membership fee
-        fetch('http://localhost:8000/payments/membership/fee')
+        fetch('http://127.0.0.1:8000/payments/membership/fee')
             .then(res => res.json())
             .then(data => setFee(data.amount))
             .catch(console.error);
@@ -33,7 +33,7 @@ export default function PayMembership() {
         setLoading(true);
         try {
             // Step 1: Create order
-            const orderRes = await fetch('http://localhost:8000/payments/membership/create-order', {
+            const orderRes = await fetch('http://127.0.0.1:8000/payments/membership/create-order', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -56,7 +56,7 @@ export default function PayMembership() {
                 handler: async function (response) {
                     // Step 3: Verify payment
                     try {
-                        const verifyRes = await fetch('http://localhost:8000/payments/membership/verify', {
+                        const verifyRes = await fetch('http://127.0.0.1:8000/payments/membership/verify', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

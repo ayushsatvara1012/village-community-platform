@@ -43,6 +43,7 @@ class Payment(Base):
     amount = Column(Float)
     currency = Column(String, default="INR")
     status = Column(String, default="completed")
+    purpose = Column(String, default="general", nullable=False)
     transaction_id = Column(String, unique=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

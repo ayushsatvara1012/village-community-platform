@@ -7,7 +7,7 @@ import {
     Users, Loader2, Mail, Phone, Briefcase, MapPin, ChevronDown, ChevronRight, ArrowLeft, X
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'http://127.0.0.1:8000';
 
 function TreeNode({ node, depth = 0, onDelete }) {
     const [expanded, setExpanded] = useState(true);
