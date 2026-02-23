@@ -9,8 +9,13 @@ class VillageBase(BaseModel):
 class VillageCreate(VillageBase):
     pass
 
+class VillageUpdate(BaseModel):
+    name: Optional[str] = None
+    district: Optional[str] = None
+
 class Village(VillageBase):
     id: int
+    member_count: Optional[int] = 0
     
     class Config:
         from_attributes = True

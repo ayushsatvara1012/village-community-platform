@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/Button';
-import { IndianRupee, Users, TrendingUp, Download, CheckCircle, XCircle, Clock, Loader2, MapPin, Plus, Trash2, ChevronDown, ChevronUp, MessageSquare, Filter } from 'lucide-react';
+import { IndianRupee, Users, TrendingUp, Download, CheckCircle, XCircle, Clock, Loader2, MapPin, Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp, MessageSquare, Filter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { FullScreenLoader } from '../components/ui/FullScreenLoader';
 
@@ -18,7 +18,10 @@ export default function Dashboard() {
     const [memberCount, setMemberCount] = useState(0);
     const [newVillage, setNewVillage] = useState({ name: '', district: '' });
     const [addingVillage, setAddingVillage] = useState(false);
+    const [showAddVillageForm, setShowAddVillageForm] = useState(false);
     const [deletingVillageId, setDeletingVillageId] = useState(null);
+    const [editingVillageId, setEditingVillageId] = useState(null);
+    const [editingVillageData, setEditingVillageData] = useState({ name: '', district: '' });
 
     const [recentDonations, setRecentDonations] = useState([]);
     const [donationsOffset, setDonationsOffset] = useState(0);
@@ -232,6 +235,7 @@ export default function Dashboard() {
             });
             if (res.ok) {
                 setNewVillage({ name: '', district: '' });
+                setShowAddVillageForm(false);
                 fetchVillages();
             } else {
                 const err = await res.json();
@@ -241,6 +245,29 @@ export default function Dashboard() {
             console.error('Add village failed:', err);
         } finally {
             setAddingVillage(false);
+        }
+    };
+
+    const handleEditVillage = async () => {
+        if (!editingVillageData.name || !editingVillageData.district) return;
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/villages/${editingVillageId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(editingVillageData)
+            });
+            if (res.ok) {
+                setEditingVillageId(null);
+                fetchVillages();
+            } else {
+                const err = await res.json();
+                alert(err.detail || 'Failed to update village');
+            }
+        } catch (err) {
+            console.error('Update village failed:', err);
         }
     };
 
@@ -665,51 +692,107 @@ export default function Dashboard() {
                             <MapPin className="w-5 h-5 text-blue-600" />
                             Village Management
                         </h3>
-                        <span className="text-sm text-gray-500">{villages.length} villages</span>
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-500">{villages.length} villages</span>
+                            <Button
+                                size="sm"
+                                variant={showAddVillageForm ? "outline" : "default"}
+                                onClick={() => setShowAddVillageForm(!showAddVillageForm)}
+                                className="gap-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                            >
+                                {showAddVillageForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                                {showAddVillageForm ? 'Cancel' : 'Add Village'}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Add Village Form */}
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
-                        <input
-                            type="text"
-                            placeholder="Village Name"
-                            value={newVillage.name}
-                            onChange={(e) => setNewVillage(prev => ({ ...prev, name: e.target.value }))}
-                            className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
-                        />
-                        <input
-                            type="text"
-                            placeholder="District"
-                            value={newVillage.district}
-                            onChange={(e) => setNewVillage(prev => ({ ...prev, district: e.target.value }))}
-                            className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
-                        />
-                        <Button
-                            onClick={handleAddVillage}
-                            disabled={addingVillage || !newVillage.name || !newVillage.district}
-                            className="gap-1 bg-green-600 hover:bg-green-700 whitespace-nowrap justify-center py-2.5 sm:py-2"
-                        >
-                            {addingVillage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                            Add Village
-                        </Button>
-                    </div>
+                    {showAddVillageForm && (
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                            <input
+                                type="text"
+                                placeholder="Village Name"
+                                value={newVillage.name}
+                                onChange={(e) => setNewVillage(prev => ({ ...prev, name: e.target.value }))}
+                                className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
+                                autoFocus
+                            />
+                            <input
+                                type="text"
+                                placeholder="District"
+                                value={newVillage.district}
+                                onChange={(e) => setNewVillage(prev => ({ ...prev, district: e.target.value }))}
+                                className="flex-1 px-4 py-2.5 sm:py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-sm text-gray-900 dark:text-white"
+                            />
+                            <Button
+                                onClick={handleAddVillage}
+                                disabled={addingVillage || !newVillage.name || !newVillage.district}
+                                className="gap-1 bg-green-600 hover:bg-green-700 whitespace-nowrap justify-center py-2.5 sm:py-2"
+                            >
+                                {addingVillage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                Save Village
+                            </Button>
+                        </div>
+                    )}
 
                     {/* Villages List */}
-                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                         {villages.map(village => (
-                            <div key={village.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{village.name}</p>
-                                    <p className="text-xs text-gray-500">{village.district}</p>
-                                </div>
-                                <button
-                                    onClick={() => handleDeleteVillage(village.id)}
-                                    disabled={deletingVillageId === village.id}
-                                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                                    title="Delete village"
-                                >
-                                    {deletingVillageId === village.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                                </button>
+                            <div key={village.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors gap-3">
+                                {editingVillageId === village.id ? (
+                                    <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                                        <input
+                                            type="text"
+                                            value={editingVillageData.name}
+                                            onChange={(e) => setEditingVillageData(prev => ({ ...prev, name: e.target.value }))}
+                                            className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={editingVillageData.district}
+                                            onChange={(e) => setEditingVillageData(prev => ({ ...prev, district: e.target.value }))}
+                                            className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                        />
+                                        <div className="flex items-center gap-1">
+                                            <Button size="sm" onClick={handleEditVillage} className="bg-green-600 hover:bg-green-700 px-2 py-1.5">
+                                                <Save className="w-4 h-4" />
+                                            </Button>
+                                            <Button size="sm" variant="outline" onClick={() => setEditingVillageId(null)} className="px-2 py-1.5">
+                                                <X className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                                {village.name}
+                                            </p>
+                                            <p className="text-xs text-gray-500">{village.district} • {village.member_count || 0} members</p>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingVillageId(village.id);
+                                                    setEditingVillageData({ name: village.name, district: village.district });
+                                                }}
+                                                className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                            </button>
+                                            {village.member_count === 0 && (
+                                                <button
+                                                    onClick={() => handleDeleteVillage(village.id)}
+                                                    disabled={deletingVillageId === village.id}
+                                                    className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                                                    title="Delete village"
+                                                >
+                                                    {deletingVillageId === village.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         ))}
                         {villages.length === 0 && (
@@ -717,7 +800,8 @@ export default function Dashboard() {
                         )}
                     </div>
                 </div>
-            )}
-        </div>
+            )
+            }
+        </div >
     );
 }

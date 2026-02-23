@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin } from 'lucide-react';
+import { Search, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Members() {
@@ -8,6 +8,7 @@ export default function Members() {
     const [members, setMembers] = useState([]);
     const [villages, setVillages] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -72,32 +73,47 @@ export default function Members() {
     return (
         <div className="flex flex-col md:flex-row min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-900">
             {/* Sidebar - Village List */}
-            <aside className="w-full md:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 md:h-[calc(100vh-64px)] md:sticky md:top-16 overflow-y-auto">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+            <aside className="w-full md:w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 md:h-[calc(100vh-64px)] md:sticky md:top-16 md:overflow-y-auto shrink-0">
+                <div
+                    className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center cursor-pointer md:cursor-auto bg-gray-50/50 dark:bg-gray-900/50 md:bg-transparent"
+                    onClick={() => {
+                        if (window.innerWidth < 768) {
+                            setIsSidebarOpen(!isSidebarOpen);
+                        }
+                    }}
+                >
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">Villages ({villages.length})</h2>
-                    <button
-                        onClick={() => setSelectedVillage(null)}
-                        className={`mt-2 w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${!selectedVillage ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}
-                    >
-                        All Villages
-                    </button>
+                    <div className="md:hidden text-gray-500">
+                        {isSidebarOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </div>
                 </div>
-                <div className="p-2 space-y-1">
-                    {villages.map((village) => (
+
+                <div className={`${isSidebarOpen ? 'block' : 'hidden'} md:block transition-all duration-300`}>
+                    <div className="p-3 border-b border-gray-200 dark:border-gray-700">
                         <button
-                            key={village.id}
-                            onClick={() => setSelectedVillage(village.id)}
-                            className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex justify-between items-center ${selectedVillage === village.id
-                                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
-                                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
-                                }`}
+                            onClick={() => { setSelectedVillage(null); setIsSidebarOpen(false); }}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${!selectedVillage ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'}`}
                         >
-                            <span className="truncate">{village.name}</span>
-                            <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400">
-                                {village.member_count}
-                            </span>
+                            All Villages
                         </button>
-                    ))}
+                    </div>
+                    <div className="p-2 space-y-1 max-h-64 overflow-y-auto md:max-h-none">
+                        {villages.map((village) => (
+                            <button
+                                key={village.id}
+                                onClick={() => { setSelectedVillage(village.id); setIsSidebarOpen(false); }}
+                                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex justify-between items-center ${selectedVillage === village.id
+                                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
+                                    }`}
+                            >
+                                <span className="truncate flex-1">{village.name}</span>
+                                <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full text-gray-500 dark:text-gray-400 ml-2">
+                                    {village.member_count}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </aside>
 
@@ -135,7 +151,7 @@ export default function Members() {
                                     key={member.id}
                                     className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all transform hover:-translate-y-1 block cursor-pointer"
                                 >
-                                    <div className="h-24 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+                                    <div className="h-24 bg-linear-to-r from-blue-400 to-indigo-500"></div>
                                     <div className="px-5 pb-5 -mt-12 flex flex-col items-center">
                                         <img
                                             src={member.photo}

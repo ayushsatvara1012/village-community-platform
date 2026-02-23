@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Annotated
 from pydantic import BaseModel
@@ -8,11 +8,39 @@ from .auth import get_current_user
 import uuid
 import hmac
 import hashlib
+import os
 
 router = APIRouter(
     prefix="/events",
     tags=["events"]
 )
+
+@router.post("/upload-image")
+async def upload_event_image(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+        
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    await file.seek(0)
+    
+    if file_size > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Image must be less than 5MB")
+        
+    ext = file.filename.split('.')[-1]
+    if ext.lower() not in ["jpg", "jpeg", "png", "webp"]:
+        raise HTTPException(status_code=400, detail="Only jpg, jpeg, png, and webp are allowed")
+
+    unique_filename = f"{uuid.uuid4().hex}.{ext}"
+    file_path = os.path.join("static", unique_filename)
+    
+    with open(file_path, "wb") as f:
+        f.write(await file.read())
+        
+    return {"url": f"http://127.0.0.1:8000/static/{unique_filename}"}
 
 @router.get("/", response_model=List[schemas.DonationEvent])
 def list_events(db: Session = Depends(database.get_db)):

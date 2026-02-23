@@ -46,6 +46,8 @@ app.add_middleware(
 def read_root():
     return {"message": "Village Community API is running"}
 
+from fastapi.staticfiles import StaticFiles
+
 from .routers import auth, members, villages, payments, events, family
 
 app.include_router(auth.router)
@@ -54,3 +56,7 @@ app.include_router(villages.router)
 app.include_router(payments.router)
 app.include_router(events.router)
 app.include_router(family.router)
+
+import os
+os.makedirs("static", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
-import { Heart, Share2, Loader2, AlertCircle, HandHeart } from 'lucide-react';
+import { Heart, Share2, Loader2, AlertCircle, HandHeart, Plus, Upload, X, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Donate() {
@@ -14,13 +14,23 @@ export default function Donate() {
     const [error, setError] = useState('');
     const { user } = useAuth();
 
+    // Add Event State
+    const [showAddEvent, setShowAddEvent] = useState(false);
+    const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+    const [newEventData, setNewEventData] = useState({ title: '', description: '', goal: '', category: 'General' });
+    const [newEventImage, setNewEventImage] = useState(null);
+
     const API_URL = 'http://127.0.0.1:8000';
 
-    useEffect(() => {
+    const fetchEvents = () => {
         fetch(`${API_URL}/events/`)
             .then(res => res.json())
             .then(data => setEvents(data))
             .catch(err => console.error("Failed to fetch events:", err));
+    };
+
+    useEffect(() => {
+        fetchEvents();
     }, []);
 
     const openRazorpayCheckout = (orderData, description, onSuccess) => {
@@ -181,6 +191,71 @@ export default function Donate() {
         }
     };
 
+    const handleCreateEvent = async () => {
+        if (!newEventData.title || !newEventData.description || !newEventData.goal || !newEventImage) {
+            setError('Please fill all fields and select an image.');
+            return;
+        }
+
+        setIsCreatingEvent(true);
+        setError('');
+        const token = localStorage.getItem('village_app_token');
+
+        try {
+            // 1. Upload Image
+            const formData = new FormData();
+            formData.append('file', newEventImage);
+
+            const uploadRes = await fetch(`${API_URL}/events/upload-image`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            });
+
+            if (!uploadRes.ok) {
+                const errData = await uploadRes.json();
+                throw new Error(errData.detail || 'Image upload failed');
+            }
+
+            const { url: imageUrl } = await uploadRes.json();
+
+            // 2. Create Event Record
+            const eventPayload = {
+                title: newEventData.title,
+                description: newEventData.description,
+                goal: parseFloat(newEventData.goal),
+                category: newEventData.category,
+                image: imageUrl
+            };
+
+            const createRes = await fetch(`${API_URL}/events/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(eventPayload)
+            });
+
+            if (!createRes.ok) {
+                const errData = await createRes.json();
+                throw new Error(errData.detail || 'Failed to create event');
+            }
+
+            // Success
+            setShowAddEvent(false);
+            setNewEventData({ title: '', description: '', goal: '', category: 'General' });
+            setNewEventImage(null);
+            fetchEvents();
+
+        } catch (err) {
+            console.error('Event creation failed:', err);
+            setError(err.message || 'Failed to create event. Please try again.');
+        } finally {
+            setIsCreatingEvent(false);
+        }
+    };
+
     // Is any modal open?
     const isModalOpen = selectedEvent || showGeneralDonate;
     const modalTitle = selectedEvent ? `Donate to ${selectedEvent.title}` : 'General Donation';
@@ -239,11 +314,17 @@ export default function Donate() {
                 </motion.div>
 
                 {/* Events Section */}
-                {events.length > 0 && (
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Active Campaigns</h2>
-                    </div>
-                )}
+                <div className="mb-8 flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Active Campaigns</h2>
+                    {user?.role === 'admin' && (
+                        <Button
+                            onClick={() => { setShowAddEvent(true); setError(''); }}
+                            className="bg-blue-600 hover:bg-blue-700 shadow-sm"
+                        >
+                            <Plus className="w-4 h-4 mr-2" /> Add Event
+                        </Button>
+                    )}
+                </div>
 
                 {events.length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
@@ -257,46 +338,53 @@ export default function Donate() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
-                                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700 flex flex-col"
+                                className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow border border-gray-100 dark:border-gray-700 flex flex-col relative min-h-[450px]"
                             >
-                                <div className="h-64 overflow-hidden relative group">
+                                <div className="absolute inset-0">
                                     <img
                                         src={event.image}
                                         alt={event.title}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
-                                    <div className="absolute top-4 right-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                                        {event.category}
-                                    </div>
+                                    {/* Glassmorphic Dark Overlay for Readability */}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-gray-900/40 backdrop-blur-[2px]"></div>
                                 </div>
 
-                                <div className="p-8 flex-1 flex flex-col">
-                                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">{event.title}</h3>
-                                    <p className="text-gray-600 dark:text-gray-300 mb-6 flex-1 text-lg">{event.description}</p>
+                                <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white border border-white/20 shadow-sm">
+                                    {event.category}
+                                </div>
 
-                                    <div className="mb-6">
-                                        <div className="flex justify-between text-sm font-medium mb-2">
-                                            <span className="text-gray-600 dark:text-gray-400">Raised: <span className="text-green-600 dark:text-green-400 font-bold">₹{event.raised.toLocaleString()}</span></span>
-                                            <span className="text-gray-500">Goal: ₹{event.goal.toLocaleString()}</span>
+                                <div className="relative z-10 p-8 flex-1 flex flex-col justify-end mt-32">
+                                    <h3 className="text-3xl font-bold text-white mb-3 shadow-sm">{event.title}</h3>
+                                    <p className="text-gray-300 mb-6 flex-1 text-lg leading-relaxed shadow-sm block text-ellipsis overflow-hidden break-words line-clamp-3">{event.description}</p>
+
+                                    <div className="mb-6 bg-gray-900/40 p-4 rounded-xl backdrop-blur-md border border-white/10">
+                                        <div className="flex justify-between text-sm font-medium mb-2 text-white/90">
+                                            <span>Raised: <span className="text-green-400 font-bold">₹{event.raised.toLocaleString()}</span></span>
+                                            <span>Goal: ₹{event.goal.toLocaleString()}</span>
                                         </div>
-                                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div className="h-3 bg-gray-800 rounded-full overflow-hidden shadow-inner">
                                             <div
-                                                className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-500"
+                                                className="h-full bg-linear-to-r from-green-500 to-emerald-400 shadow-lg relative"
                                                 style={{ width: `${Math.min((event.raised / event.goal) * 100, 100)}%` }}
-                                            ></div>
+                                            >
+                                                {Math.min((event.raised / event.goal) * 100, 100) >= 100 && (
+                                                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div className="flex gap-4 mt-auto">
                                         <Button
-                                            className="flex-1 text-lg py-3 shadow-lg shadow-red-500/20 bg-red-600 hover:bg-red-700 border-none"
+                                            className="flex-1 text-lg py-3 shadow-lg shadow-red-600/30 bg-red-600 hover:bg-red-500 border-none text-white backdrop-blur-md"
                                             onClick={() => { setSelectedEvent(event); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
                                         >
-                                            <Heart className="w-5 h-5 mr-2 fill-current" />
-                                            Donate Now
+                                            <Heart className="w-5 h-5 mr-2 fill-current shrink-0" />
+                                            Contribute
                                         </Button>
-                                        <Button variant="outline" className="px-4 border-gray-300 dark:border-gray-600">
-                                            <Share2 className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                                        <Button variant="outline" className="px-4 border-white/20 bg-white/10 hover:bg-white/20 text-white backdrop-blur-md">
+                                            <Share2 className="w-5 h-5" />
                                         </Button>
                                     </div>
                                 </div>
@@ -342,8 +430,8 @@ export default function Donate() {
                                 <>
                                     <div className="text-center mb-8">
                                         <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${showGeneralDonate
-                                                ? 'bg-gradient-to-br from-rose-100 to-orange-100 dark:from-rose-900/20 dark:to-orange-900/20'
-                                                : 'bg-red-50 dark:bg-red-900/20'
+                                            ? 'bg-gradient-to-br from-rose-100 to-orange-100 dark:from-rose-900/20 dark:to-orange-900/20'
+                                            : 'bg-red-50 dark:bg-red-900/20'
                                             }`}>
                                             {showGeneralDonate
                                                 ? <HandHeart className="w-8 h-8 text-red-600" />
@@ -415,6 +503,126 @@ export default function Donate() {
                                     </div>
                                 </>
                             )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence >
+
+            {/* Create Event Modal */}
+            < AnimatePresence >
+                {showAddEvent && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.95, y: 20 }}
+                            className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 md:p-8 relative max-h-[90vh] overflow-y-auto"
+                        >
+                            <button
+                                onClick={() => { setShowAddEvent(false); setNewEventImage(null); }}
+                                className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create Campaign Event</h2>
+
+                            {error && (
+                                <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
+                                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                    {error}
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Title</label>
+                                    <input
+                                        type="text"
+                                        value={newEventData.title}
+                                        onChange={(e) => setNewEventData({ ...newEventData, title: e.target.value })}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
+                                        placeholder="e.g., Annual Sports Day"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Goal (₹)</label>
+                                        <input
+                                            type="number"
+                                            value={newEventData.goal}
+                                            onChange={(e) => setNewEventData({ ...newEventData, goal: e.target.value })}
+                                            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
+                                            placeholder="50000"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                                        <select
+                                            value={newEventData.category}
+                                            onChange={(e) => setNewEventData({ ...newEventData, category: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white"
+                                        >
+                                            <option value="Education">Education</option>
+                                            <option value="Healthcare">Healthcare</option>
+                                            <option value="Festival">Festival</option>
+                                            <option value="Infrastructure">Infrastructure</option>
+                                            <option value="General">General</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                                    <textarea
+                                        value={newEventData.description}
+                                        onChange={(e) => setNewEventData({ ...newEventData, description: e.target.value })}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent focus:ring-2 focus:ring-blue-500 outline-none text-gray-900 dark:text-white min-h-[100px]"
+                                        placeholder="Explain what this campaign is for..."
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Cover Image (&lt; 5MB)</label>
+                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                                        <div className="space-y-1 text-center">
+                                            {newEventImage ? (
+                                                <div className="flex flex-col items-center">
+                                                    <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+                                                    <p className="text-sm font-medium text-gray-900 dark:text-white mt-2">{newEventImage.name}</p>
+                                                    <button type="button" onClick={() => setNewEventImage(null)} className="text-xs text-red-500 mt-1 hover:underline">Remove</button>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                                    <div className="flex text-sm text-gray-600 dark:text-gray-400 justify-center">
+                                                        <label htmlFor="file-upload" className="relative cursor-pointer bg-transparent rounded-md font-medium text-blue-600 dark:text-blue-400 hover:text-blue-500 focus-within:outline-none">
+                                                            <span>Upload a file</span>
+                                                            <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/jpeg, image/png, image/webp" onChange={(e) => setNewEventImage(e.target.files[0])} />
+                                                        </label>
+                                                        <p className="pl-1">or drag and drop</p>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG, WEBP up to 5MB</p>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    className="w-full py-3 mt-4"
+                                    onClick={handleCreateEvent}
+                                    disabled={isCreatingEvent}
+                                >
+                                    {isCreatingEvent ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Publishing Event...</> : 'Launch Campaign'}
+                                </Button>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

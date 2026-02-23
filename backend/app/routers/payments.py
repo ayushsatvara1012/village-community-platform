@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, Date, Integer
+from sqlalchemy import func, Date, Integer, extract
 from typing import List, Annotated
 from pydantic import BaseModel
 from .. import models, schemas, database
@@ -294,9 +294,9 @@ def get_chart_data(
         query = query.filter(func.cast(models.Payment.created_at, Date) <= end_date)
     
     if year:
-        query = query.filter(func.extract('year', models.Payment.created_at) == year)
+        query = query.filter(extract('year', models.Payment.created_at) == year)
     if month:
-        query = query.filter(func.extract('month', models.Payment.created_at) == month)
+        query = query.filter(extract('month', models.Payment.created_at) == month)
 
     results = query.group_by("date").order_by("date").all()
 
