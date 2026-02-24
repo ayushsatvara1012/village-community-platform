@@ -43,7 +43,7 @@ export default function Dashboard() {
 
     const fetchVillages = () => {
         setIsLoadingVillages(true);
-        fetch('http://127.0.0.1:8000/villages/')
+        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
             .then(res => res.json())
             .then(data => {
                 setVillages(data);
@@ -56,7 +56,7 @@ export default function Dashboard() {
     const fetchMembers = () => {
         setIsLoadingMembers(true);
         if (token) {
-            fetch('http://127.0.0.1:8000/members/', {
+            fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.ok ? res.json() : [])
@@ -71,7 +71,7 @@ export default function Dashboard() {
     const fetchPending = () => {
         setIsLoadingPending(true);
         if (token) {
-            fetch('http://127.0.0.1:8000/members/pending', {
+            fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/pending', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.ok ? res.json() : [])
@@ -91,7 +91,7 @@ export default function Dashboard() {
         if (filters.month) params.append('month', filters.month);
         if (filters.year) params.append('year', filters.year);
 
-        fetch(`http://127.0.0.1:8000/payments/chart?${params.toString()}`)
+        fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/payments/chart?${params.toString()}`)
             .then(res => res.json())
             .then(data => setChartData(data))
             .catch(err => console.error("Failed to fetch chart data:", err))
@@ -108,7 +108,7 @@ export default function Dashboard() {
         if (filters.start_date) params.append('start_date', filters.start_date);
         if (filters.end_date) params.append('end_date', filters.end_date);
 
-        fetch(`http://127.0.0.1:8000/payments/recent-donations?${params.toString()}`)
+        fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/payments/recent-donations?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
                 if (offset === 0) {
@@ -134,7 +134,7 @@ export default function Dashboard() {
         fetchMembers();
 
         setIsLoadingStats(true);
-        fetch('http://127.0.0.1:8000/payments/stats')
+        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/payments/stats')
             .then(res => res.json())
             .then(data => setStats(data))
             .catch(err => console.error("Failed to fetch stats:", err))
@@ -168,7 +168,7 @@ export default function Dashboard() {
     const handleApprove = async (memberId) => {
         setActionId(memberId);
         try {
-            const res = await fetch(`http://127.0.0.1:8000/members/${memberId}/approve`, {
+            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/members/${memberId}/approve`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -198,7 +198,7 @@ export default function Dashboard() {
         }
         setActionId(memberId);
         try {
-            const res = await fetch(`http://127.0.0.1:8000/members/${memberId}/reject`, {
+            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/members/${memberId}/reject`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -225,7 +225,7 @@ export default function Dashboard() {
         if (!newVillage.name || !newVillage.district) return;
         setAddingVillage(true);
         try {
-            const res = await fetch('http://127.0.0.1:8000/villages/', {
+            const res = await fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -251,7 +251,7 @@ export default function Dashboard() {
     const handleEditVillage = async () => {
         if (!editingVillageData.name || !editingVillageData.district) return;
         try {
-            const res = await fetch(`http://127.0.0.1:8000/villages/${editingVillageId}`, {
+            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/villages/${editingVillageId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ export default function Dashboard() {
         if (!confirm('Delete this village?')) return;
         setDeletingVillageId(villageId);
         try {
-            const res = await fetch(`http://127.0.0.1:8000/villages/${villageId}`, {
+            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/villages/${villageId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });

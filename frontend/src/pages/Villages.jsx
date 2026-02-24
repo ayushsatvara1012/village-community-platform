@@ -12,7 +12,7 @@ export default function Villages() {
 
     const fetchVillages = () => {
         setLoading(true);
-        fetch('http://127.0.0.1:8000/villages/')
+        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
             .then(res => res.json())
             .then(data => {
                 // Sort alphabetically by name

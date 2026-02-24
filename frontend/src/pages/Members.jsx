@@ -18,10 +18,10 @@ export default function Members() {
         try {
             const token = localStorage.getItem('village_app_token');
             const [membersRes, villagesRes] = await Promise.all([
-                fetch('http://127.0.0.1:8000/members/', {
+                fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/', {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 }),
-                fetch('http://127.0.0.1:8000/villages/')
+                fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
             ]);
 
             if (membersRes.ok && villagesRes.ok) {

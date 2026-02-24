@@ -20,7 +20,7 @@ export default function Donate() {
     const [newEventData, setNewEventData] = useState({ title: '', description: '', goal: '', category: 'General' });
     const [newEventImage, setNewEventImage] = useState(null);
 
-    const API_URL = 'http://127.0.0.1:8000';
+    const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
     const fetchEvents = () => {
         fetch(`${API_URL}/events/`)

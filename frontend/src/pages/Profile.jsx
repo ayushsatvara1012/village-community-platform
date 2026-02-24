@@ -7,7 +7,7 @@ import {
     ChevronDown, ChevronRight, Mail, Phone, Briefcase, MapPin
 } from 'lucide-react';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
 const RELATIONS = ['Father', 'Mother', 'Spouse', 'Son', 'Daughter', 'Brother', 'Sister', 'Grandfather', 'Grandmother', 'Uncle', 'Aunt'];
 

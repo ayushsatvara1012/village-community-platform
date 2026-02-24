@@ -7,7 +7,7 @@ import {
     Users, Loader2, Mail, Phone, Briefcase, MapPin, ChevronDown, ChevronRight, ArrowLeft, X
 } from 'lucide-react';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
 function TreeNode({ node, depth = 0, onDelete }) {
     const [expanded, setExpanded] = useState(true);

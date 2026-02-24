@@ -32,7 +32,7 @@ export default function Application() {
     useEffect(() => {
         const fetchVillages = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8000/villages/');
+                const response = await fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/');
                 if (response.ok) {
                     const data = await response.json();
                     setVillages(data);
