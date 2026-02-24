@@ -162,7 +162,7 @@ export function Navbar() {
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
                         {isAuthenticated ? (
                             <>
-                                <div className="px-3 py-2 flex items-center gap-3">
+                                <Link to="/profile" className="px-3 py-2 flex items-center gap-3">
                                     <img src={getAvatarUrl()} alt={getUserDisplayName()} className="w-8 h-8 rounded-full bg-gray-200" />
                                     <div>
                                         <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{getUserDisplayName()}</span>
@@ -172,7 +172,7 @@ export function Navbar() {
                                             </span>
                                         )}
                                     </div>
-                                </div>
+                                </Link>
                                 {(user?.status === 'member' || user?.role === 'admin') && (
                                     <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-3 py-2">
                                         <Button variant="outline" className="w-full justify-start">
