@@ -53,7 +53,7 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="flex-1 flex bg-cover bg-center overflow-hidden relative" style={{ backgroundImage: "url('/src/assets/Gemini_Generated_Image_pq9366pq9366pq93.png')" }}>
+        <div className="flex-1 flex bg-cover bg-center overflow-hidden relative" style={{ backgroundImage: "url('/Gemini_Generated_Image_pq9366pq9366pq93.png')" }}>
             <div className="absolute inset-0 bg-gray-950/80 backdrop-blur-sm z-0"></div>
 
             <div className="w-full h-full flex items-center justify-center p-4 relative z-10 overflow-y-auto">

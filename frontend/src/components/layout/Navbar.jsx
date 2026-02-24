@@ -56,7 +56,7 @@ export function Navbar() {
                         <Link to="/" className="flex-shrink-0 flex items-center gap-2">
 
                             <img
-                                src="/src/assets/v-logo.png"
+                                src="/v-logo.png"
                                 alt="Logo"
                                 className="w-10 h-10 object-contain"
                             />

@@ -32,7 +32,7 @@ export default function Register() {
     };
 
     return (
-        <div className="flex-1 flex bg-cover bg-center overflow-hidden relative" style={{ backgroundImage: "url('/src/assets/Gemini_Generated_Image_pq9366pq9366pq93.png')" }}>
+        <div className="flex-1 flex bg-cover bg-center overflow-hidden relative" style={{ backgroundImage: "url('/Gemini_Generated_Image_pq9366pq9366pq93.png')" }}>
             {/* Global dark overlay for readability */}
             <div className="absolute inset-0 bg-gray-900/60  z-0"></div>
 
