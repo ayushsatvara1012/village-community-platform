@@ -39,4 +39,5 @@ env/
 !package.json
 !tsconfig.json
 !composer.json
+!vercel.json
 backend/*.json
