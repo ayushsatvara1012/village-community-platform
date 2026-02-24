@@ -55,6 +55,8 @@ def send_otp_email(to_email: str, otp: str):
 
     msg.attach(MIMEText(html, "html"))
 
+    print(f"DEBUG: Attempting to send email via {SMTP_HOST}:{SMTP_PORT} (User: {SMTP_USER[:3]}...)")
+
     try:
         if SMTP_PORT == 465:
             # Use SSL for port 465
