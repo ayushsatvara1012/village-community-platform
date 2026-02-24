@@ -18,6 +18,28 @@ export function AuthProvider({ children }) {
         checkUserLoggedIn();
     }, []);
 
+    const fetchWithTimeout = async (resource, options = {}) => {
+        const { timeout = 15000 } = options;
+
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+
+        try {
+            const response = await fetch(resource, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(id);
+            return response;
+        } catch (error) {
+            clearTimeout(id);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timed out. Please check your internet connection and try again.');
+            }
+            throw error;
+        }
+    };
+
     const checkUserLoggedIn = async () => {
         const token = localStorage.getItem('village_app_token');
         if (token) {
@@ -75,7 +97,7 @@ export function AuthProvider({ children }) {
 
     const adminRequestOtp = async (email) => {
         try {
-            const response = await fetch(`${API_URL}/auth/admin/request-otp`, {
+            const response = await fetchWithTimeout(`${API_URL}/auth/admin/request-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -122,7 +144,7 @@ export function AuthProvider({ children }) {
 
     const requestUserOtp = async (identifier) => {
         try {
-            const response = await fetch(`${API_URL}/auth/request-otp`, {
+            const response = await fetchWithTimeout(`${API_URL}/auth/request-otp`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -308,7 +330,7 @@ export function AuthProvider({ children }) {
 
     const requestPasswordResetOtp = async (email) => {
         try {
-            const response = await fetch(`${API_URL}/auth/forgot-password/request-otp`, {
+            const response = await fetchWithTimeout(`${API_URL}/auth/forgot-password/request-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email }),
