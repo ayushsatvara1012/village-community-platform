@@ -308,7 +308,7 @@ export default function Dashboard() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-[url('/Users/ayushsatvara/.gemini/antigravity/playground/outer-planck/frontend/src/assets/indian-rupee.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="bg-[url('/indian-rupee.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Collection</h3>
                         {/* <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -321,7 +321,7 @@ export default function Dashboard() {
                     </p>
                 </div>
 
-                <div className="bg-[url('/Users/ayushsatvara/.gemini/antigravity/playground/outer-planck/frontend/src/assets/users.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="bg-[url('/users.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Members</h3>
                         {/* <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -331,7 +331,7 @@ export default function Dashboard() {
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">{memberCount}</p>
                 </div>
 
-                <div className="bg-[url('/Users/ayushsatvara/.gemini/antigravity/playground/outer-planck/frontend/src/assets/map-pin.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="bg-[url('/map-pin.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Villages</h3>
                         {/* <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
