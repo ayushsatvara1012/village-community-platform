@@ -89,7 +89,7 @@ export default function Application() {
     const steps = ['Village', 'Details', 'Review'];
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 pt-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto">
 
                 {/* Show progress only for steps 1-3 */}
@@ -128,12 +128,12 @@ export default function Application() {
                                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Select Your Village</h2>
                                     <p className="text-gray-500 dark:text-gray-400">Where are you from?</p>
                                 </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-h-[60vh] sm:max-h-96 overflow-y-auto pr-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 max-h-75 sm:max-h-70 overflow-y-auto pr-2">
                                     {villages.map((village) => (
                                         <button
                                             key={village.id}
                                             onClick={() => updateFormData('village_id', village.id)}
-                                            className={`p-4 rounded-xl border-2 text-left transition-all ${formData.village_id === village.id
+                                            className={`flex flex-row items-center justify-between p-4 rounded-xl border-2 text-left transition-all ${formData.village_id === village.id
                                                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
                                                 }`}
