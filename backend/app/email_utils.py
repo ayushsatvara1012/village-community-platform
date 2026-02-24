@@ -53,8 +53,15 @@ def send_otp_email(to_email: str, otp: str):
         print(f"DEBUG: Attempting to send email via Resend API (To: {to_email})")
         try:
             resend.api_key = RESEND_API_KEY
+            # Determine the sender address: 
+            # 1. Use SMTP_FROM if it looks like a Resend-compatible address
+            # 2. Otherwise use a custom name with the default Resend onboarding email
+            from_address = SMTP_FROM
+            if "onboarding@resend.dev" not in from_address and "@resend.com" not in from_address and "@resend.dev" not in from_address:
+                from_address = "Satvara 32 Samaj <onboarding@resend.dev>"
+
             params = {
-                "from": SMTP_FROM if "resend.com" in SMTP_FROM else "Village Samaj <onboarding@resend.dev>",
+                "from": from_address,
                 "to": to_email,
                 "subject": f"Your Admin Login OTP: {otp}",
                 "html": html,
