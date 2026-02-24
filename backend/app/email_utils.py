@@ -1,5 +1,6 @@
 import smtplib
 import os
+import resend
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -9,18 +10,11 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 
 
 def send_otp_email(to_email: str, otp: str):
-    """Send OTP code to admin via email."""
-    if not SMTP_USER or not SMTP_PASSWORD:
-        print("⚠️  SMTP not configured — printing OTP to console instead.")
-        print("=" * 50)
-        print(f"  ADMIN OTP for {to_email}: {otp}")
-        print(f"  Expires in 5 minutes")
-        print("=" * 50)
-        return False
-
+    """Send OTP code code via Email."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = f"Your Admin Login OTP: {otp}"
     msg["From"] = SMTP_FROM
@@ -52,30 +46,53 @@ def send_otp_email(to_email: str, otp: str):
     </body>
     </html>
     """
-
     msg.attach(MIMEText(html, "html"))
+    
+    # 1. Try Resend API first if configured (Most reliable on Render)
+    if RESEND_API_KEY:
+        print(f"DEBUG: Attempting to send email via Resend API (To: {to_email})")
+        try:
+            resend.api_key = RESEND_API_KEY
+            params = {
+                "from": SMTP_FROM if "resend.com" in SMTP_FROM else "Village Samaj <onboarding@resend.dev>",
+                "to": to_email,
+                "subject": f"Your Admin Login OTP: {otp}",
+                "html": html,
+            }
+            resend.Emails.send(params)
+            print(f"✅ OTP email sent via Resend API to {to_email}")
+            return True
+        except Exception as e:
+            print(f"❌ Resend API failed: {e}")
+            # Continue to SMTP fallback
 
-    print(f"DEBUG: Attempting to send email via {SMTP_HOST}:{SMTP_PORT} (User: {SMTP_USER[:3]}...)")
+    # 2. Skip SMTP if not configured
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("⚠️  SMTP/API not configured — printing OTP to console instead.")
+        _print_otp_box(to_email, otp)
+        return False
 
+    # 3. Try SMTP
+    print(f"DEBUG: Attempting to send email via SMTP {SMTP_HOST}:{SMTP_PORT} (User: {SMTP_USER[:3]}...)")
     try:
         if SMTP_PORT == 465:
-            # Use SSL for port 465
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 server.sendmail(SMTP_FROM, to_email, msg.as_string())
         else:
-            # Use STARTTLS for 587 or other ports
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
                 server.starttls()
                 server.login(SMTP_USER, SMTP_PASSWORD)
                 server.sendmail(SMTP_FROM, to_email, msg.as_string())
-        print(f"✅ OTP email sent to {to_email}")
+        print(f"✅ OTP email sent via SMTP to {to_email}")
         return True
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
-        # Fallback to console
-        print("=" * 50)
-        print(f"  ADMIN OTP for {to_email}: {otp}")
-        print(f"  Expires in 5 minutes")
-        print("=" * 50)
+        print(f"❌ Failed to send email via SMTP: {e}")
+        _print_otp_box(to_email, otp)
         return False
+
+def _print_otp_box(to_email, otp):
+    print("=" * 50)
+    print(f"  ADMIN OTP for {to_email}: {otp}")
+    print(f"  Expires in 5 minutes")
+    print("=" * 50)
