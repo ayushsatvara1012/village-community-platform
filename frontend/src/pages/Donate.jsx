@@ -355,8 +355,8 @@ export default function Donate() {
                                 </div>
 
                                 <div className="relative z-10 p-8 flex-1 flex flex-col justify-end mt-32">
-                                    <h3 className="text-3xl font-bold text-white mb-3 shadow-sm">{event.title}</h3>
-                                    <p className="text-gray-300 mb-6 flex-1 text-lg leading-relaxed shadow-sm block text-ellipsis overflow-hidden break-words line-clamp-3">{event.description}</p>
+                                    <h3 className="text-3xl font-bold text-white mb-3">{event.title}</h3>
+                                    <p className="text-gray-300 mb-6 flex-1 text-lg leading-relaxed block text-ellipsis overflow-hidden break-words line-clamp-3">{event.description}</p>
 
                                     <div className="mb-6 bg-gray-900/40 p-4 rounded-xl backdrop-blur-md border border-white/10">
                                         <div className="flex justify-between text-sm font-medium mb-2 text-white/90">
@@ -573,7 +573,7 @@ export default function Donate() {
                                             <option value="Healthcare">Healthcare</option>
                                             <option value="Festival">Festival</option>
                                             <option value="Infrastructure">Infrastructure</option>
-                                            <option value="General">General</option>
+                                            <option value="General">General Function</option>
                                         </select>
                                     </div>
                                 </div>

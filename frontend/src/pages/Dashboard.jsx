@@ -308,37 +308,46 @@ export default function Dashboard() {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-[url('/indian-rupee.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Collection</h3>
-                        {/* <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                            <IndianRupee className="w-5 h-5 text-green-600 dark:text-green-400" />
-                        </div> */}
+                {/* Total Collection */}
+                <div className="relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 group hover:shadow-md transition-shadow">
+                    <div className="absolute -right-2 -bottom-10 text-green-600/10 dark:text-green-400/10 group-hover:scale-110 transition-transform duration-500">
+                        <IndianRupee size={160} strokeWidth={1} />
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        ₹{stats.total_collection.toLocaleString()}
-                        <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full">Live</span>
-                    </p>
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Collection</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            ₹{stats.total_collection.toLocaleString()}
+                            <span className="text-[10px] text-green-600 dark:text-green-400 font-bold bg-green-50 dark:bg-green-900/40 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-800">LIVE</span>
+                        </p>
+                    </div>
                 </div>
 
-                <div className="bg-[url('/users.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Members</h3>
-                        {/* <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                            <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        </div> */}
+                {/* Total Members */}
+                <div className="relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 group hover:shadow-md transition-shadow">
+                    <div className="absolute -right-2 -bottom-10 text-blue-600/10 dark:text-blue-400/10 group-hover:scale-110 transition-transform duration-500">
+                        <Users size={160} strokeWidth={1} />
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{memberCount}</p>
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Members</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{memberCount.toLocaleString()}</p>
+                    </div>
                 </div>
 
-                <div className="bg-[url('/map-pin.svg')] bg-no-repeat bg-top-right bg-size-[180px] dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Villages</h3>
-                        {/* <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                            <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                        </div> */}
+                {/* Villages */}
+                <div className="relative overflow-hidden bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 group hover:shadow-md transition-shadow">
+                    <div className="absolute -right-2 -bottom-10 text-purple-600/10 dark:text-purple-400/10 group-hover:scale-110 transition-transform duration-500">
+                        <MapPin size={160} strokeWidth={1} />
                     </div>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">{villageCount}</p>
+                    <div className="relative z-10">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Villages</h3>
+                        </div>
+                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{villageCount.toLocaleString()}</p>
+                    </div>
                 </div>
             </div>
 
