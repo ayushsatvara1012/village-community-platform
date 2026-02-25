@@ -143,3 +143,9 @@ class UserOtpVerify(BaseModel):
     otp: str
     remember_me: Optional[bool] = False
 
+
+class UserUpdate(BaseModel):
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    address: Optional[str] = None
+    profession: Optional[str] = None
