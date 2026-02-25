@@ -219,7 +219,8 @@ export function AuthProvider({ children }) {
             full_name: name,
             email: email,
             password: password,
-            phone_number: phone
+            phone_number: phone,
+            date_of_birth: arguments[4] // Added as an optional argument to allow flexibility
         };
         setPendingRegistration(regData);
         localStorage.setItem('pending_registration', JSON.stringify(regData));
@@ -247,7 +248,8 @@ export function AuthProvider({ children }) {
                     email: regData.email,
                     password: regData.password,
                     phone_number: regData.phone_number,
-                    village_id: applicationDetails.village_id
+                    village_id: applicationDetails.village_id,
+                    date_of_birth: applicationDetails.date_of_birth
                 }),
             });
 
@@ -270,7 +272,8 @@ export function AuthProvider({ children }) {
                 body: JSON.stringify({
                     village_id: applicationDetails.village_id,
                     address: applicationDetails.address,
-                    profession: applicationDetails.profession
+                    profession: applicationDetails.profession,
+                    date_of_birth: applicationDetails.date_of_birth
                 }),
             });
 
@@ -311,7 +314,8 @@ export function AuthProvider({ children }) {
                 body: JSON.stringify({
                     village_id: details.village_id,
                     address: details.address,
-                    profession: details.profession
+                    profession: details.profession,
+                    date_of_birth: details.date_of_birth
                 }),
             });
 

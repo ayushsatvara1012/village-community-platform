@@ -162,7 +162,7 @@ export function Navbar() {
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 mt-2">
                         {isAuthenticated ? (
                             <>
-                                <Link to="/profile" className="px-3 py-2 flex items-center gap-3">
+                                <Link to="/profile" onClick={() => setIsOpen(false)} className="px-3 py-2 flex items-center gap-3">
                                     <img src={getAvatarUrl()} alt={getUserDisplayName()} className="w-8 h-8 rounded-full bg-gray-200" />
                                     <div>
                                         <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{getUserDisplayName()}</span>
@@ -181,7 +181,7 @@ export function Navbar() {
                                     </Link>
                                 )}
                                 <div className="px-3 py-2">
-                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={logout}>
+                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={()=>{logout(); setIsOpen(false)}}>
                                         <LogOut className="w-4 h-4 mr-2" />
                                         Logout
                                     </Button>

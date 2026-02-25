@@ -27,6 +27,7 @@ class UserBase(BaseModel):
     address: Optional[str] = None
     village_id: Optional[int] = None
     profession: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
 
 class UserCreate(UserBase):
     password: str
@@ -149,3 +150,4 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     address: Optional[str] = None
     profession: Optional[str] = None
+    date_of_birth: Optional[datetime] = None

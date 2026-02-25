@@ -64,7 +64,7 @@ function TreeNode({ node, onDelete, depth = 0 }) {
                 {!isSelf && (
                     <button
                         onClick={() => onDelete(node.id)}
-                        className="absolute -top-2 -right-2 w-7 h-7 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg active:scale-95"
+                        className="absolute -top-2 -right-2 w-7 h-7 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center opacity-100 transition-all shadow-lg active:scale-95"
                         title="Remove member"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -143,8 +143,24 @@ export default function Profile() {
         full_name: '',
         phone_number: '',
         address: '',
-        profession: ''
+        profession: '',
+        date_of_birth: ''
     });
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            // Handle ISO string or YYYY-MM-DD
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const d = date.getDate().toString().padStart(2, '0');
+            const m = (date.getMonth() + 1).toString().padStart(2, '0');
+            const y = date.getFullYear();
+            return `${d}/${m}/${y}`;
+        } catch (e) {
+            return dateStr;
+        }
+    };
 
     const token = localStorage.getItem('village_app_token');
     const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
@@ -171,7 +187,8 @@ export default function Profile() {
                 full_name: user.full_name || '',
                 phone_number: user.phone_number || '',
                 address: user.address || '',
-                profession: user.profession || ''
+                profession: user.profession || '',
+                date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : ''
             });
         }
     }, [user]);
@@ -335,6 +352,14 @@ export default function Profile() {
                                         </div>
                                         {user.village?.name || "Village Not Set"}
                                     </span>
+                                    {user.date_of_birth && (
+                                        <span className="flex items-center gap-2 group cursor-default">
+                                            <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-amber-500/10 group-hover:text-amber-500 transition-colors">
+                                                <User className="w-4 h-4" />
+                                            </div>
+                                            Born: {formatDate(user.date_of_birth)}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -399,13 +424,18 @@ export default function Profile() {
                             <>
                                 <motion.div
                                     drag
-                                    dragConstraints={containerRef}
-                                    dragElastic={0}
-                                    dragTransition={{ power: 0.1, timeConstant: 200 }}
+                                    dragConstraints={{ left: -1200, right: 1200, top: -800, bottom: 1200 }}
+                                    dragElastic={0.15}
+                                    dragMomentum={false}
                                     animate={{
                                         scale: zoomScale,
                                         x: dragPosition.x,
                                         y: dragPosition.y
+                                    }}
+                                    transition={{
+                                        scale: { duration: 0.3 },
+                                        x: { duration: dragPosition.x === 0 ? 0.5 : 0 },
+                                        y: { duration: dragPosition.y === 0 ? 0.5 : 0 }
                                     }}
                                     onDragEnd={(e, info) => {
                                         setDragPosition({
@@ -664,6 +694,20 @@ export default function Profile() {
                                             onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
                                             className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
                                         />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Birth Date</label>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={editProfileData.date_of_birth}
+                                                onChange={(e) => setEditProfileData({ ...editProfileData, date_of_birth: e.target.value })}
+                                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-transparent dark:text-transparent selection:bg-transparent font-bold"
+                                            />
+                                            <div className="absolute inset-0 flex items-center px-5 pointer-events-none text-black dark:text-white font-bold">
+                                                {editProfileData.date_of_birth ? formatDate(editProfileData.date_of_birth) : <span className="text-gray-400">DD/MM/YYYY</span>}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

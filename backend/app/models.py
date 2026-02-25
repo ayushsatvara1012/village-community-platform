@@ -24,6 +24,7 @@ class User(Base):
     role = Column(String, default="user") # user, admin
     status = Column(String, default="pending") # pending, approved, member, rejected
     profession = Column(String, nullable=True)
+    date_of_birth = Column(DateTime, nullable=True)
     admin_comment = Column(String, nullable=True) # Admin approval/rejection comment
     sabhasad_id = Column(String, unique=True, nullable=True, index=True) # Assigned after payment
     village_id = Column(Integer, ForeignKey("villages.id"), nullable=True)
