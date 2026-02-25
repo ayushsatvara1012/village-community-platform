@@ -14,6 +14,7 @@ class MembershipApplication(BaseModel):
     village_id: int
     address: Optional[str] = None
     profession: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
 
 class AdminAction(BaseModel):
     comment: Optional[str] = None
@@ -86,6 +87,7 @@ def apply_for_membership(
     current_user.village_id = application.village_id
     current_user.address = application.address
     current_user.profession = application.profession
+    current_user.date_of_birth = application.date_of_birth
     current_user.status = "pending"
 
     db.commit()

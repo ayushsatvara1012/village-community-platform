@@ -14,6 +14,7 @@ export default function Application() {
         village_id: '',
         address: '',
         profession: '',
+        date_of_birth: '',
     });
     const [isProcessing, setIsProcessing] = useState(false);
     const [villages, setVillages] = useState([]);
@@ -55,11 +56,11 @@ export default function Application() {
         setIsProcessing(true);
         try {
             if (pendingRegistration) {
-                // Fresh registration — register + apply atomically
                 await registerAndApply({
                     village_id: formData.village_id,
                     address: formData.address,
                     profession: formData.profession,
+                    date_of_birth: formData.date_of_birth,
                 });
             } else {
                 // Already registered user re-applying
@@ -67,6 +68,7 @@ export default function Application() {
                     village_id: formData.village_id,
                     address: formData.address,
                     profession: formData.profession,
+                    date_of_birth: formData.date_of_birth,
                 });
             }
             navigate('/');
@@ -75,6 +77,17 @@ export default function Application() {
             alert(error.message || 'Something went wrong. Please try again.');
         } finally {
             setIsProcessing(false);
+        }
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        try {
+            const [year, month, day] = dateStr.split('-');
+            if (!year || !month || !day) return dateStr;
+            return `${day}/${month}/${year}`;
+        } catch (e) {
+            return dateStr;
         }
     };
 
@@ -174,10 +187,24 @@ export default function Application() {
                                             placeholder="e.g. Teacher, Farmer, Engineer"
                                         />
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Birth Date *</label>
+                                        <div className="relative">
+                                            <input
+                                                type="date"
+                                                value={formData.date_of_birth}
+                                                onChange={(e) => updateFormData('date_of_birth', e.target.value)}
+                                                className="w-full px-4 py-3 rounded-lg bg-white/50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none text-transparent dark:text-transparent selection:bg-transparent"
+                                            />
+                                            <div className="absolute inset-0 flex items-center px-4 pointer-events-none text-gray-900 dark:text-white">
+                                                {formData.date_of_birth ? formatDate(formData.date_of_birth) : <span className="text-gray-400">DD/MM/YYYY</span>}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div className="flex justify-between pt-6">
                                     <Button variant="outline" onClick={prevStep}>Back</Button>
-                                    <Button onClick={nextStep} disabled={!formData.address || !formData.profession}>Continue</Button>
+                                    <Button onClick={nextStep} disabled={!formData.address || !formData.profession || !formData.date_of_birth}>Continue</Button>
                                 </div>
                             </motion.div>
                         )}
@@ -197,6 +224,7 @@ export default function Application() {
                                         <div className="flex justify-between"><span className="text-gray-500">Village</span><span className="font-medium">{villages.find(v => v.id === formData.village_id)?.name}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Address</span><span className="font-medium">{formData.address}</span></div>
                                         <div className="flex justify-between"><span className="text-gray-500">Profession</span><span className="font-medium">{formData.profession}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Birth Date</span><span className="font-medium">{formatDate(formData.date_of_birth)}</span></div>
                                     </div>
                                 </div>
 

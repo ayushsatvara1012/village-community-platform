@@ -25,6 +25,10 @@
     background-color: #ffffff;
   }
 }
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 /* Custom animated loader */
 .loader {

@@ -85,6 +85,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
         phone_number=user.phone_number,
         village_id=user.village_id,
         profession=user.profession,
+        date_of_birth=user.date_of_birth,
         status="pending"
     )
     db.add(new_user)
