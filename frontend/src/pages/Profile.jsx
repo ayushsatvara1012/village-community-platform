@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Users, Plus, Trash2, Loader2, AlertCircle, X,
-    ChevronDown, ChevronRight, Mail, Phone, Briefcase, MapPin
+    ChevronDown, ChevronRight, Mail, Phone, Briefcase, MapPin,
+    RotateCcw, Edit2
 } from 'lucide-react';
 
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
@@ -112,14 +113,20 @@ function TreeNode({ node, onDelete, depth = 0 }) {
 }
 
 export default function Profile() {
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [tree, setTree] = useState(null);
     const [flatList, setFlatList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [zoomScale, setZoomScale] = useState(0.85); // Default smaller for better overview
+    const containerRef = useRef(null);
+    const [lastTouchDistance, setLastTouchDistance] = useState(null);
+
+    // Initial center position (0,0) works well with motion.div relative layout
+    const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
 
     // Add form state
     const [newMember, setNewMember] = useState({
@@ -129,6 +136,14 @@ export default function Profile() {
         age: '',
         profession: '',
         linked_sabhasad_id: ''
+    });
+
+    // Edit profile state
+    const [editProfileData, setEditProfileData] = useState({
+        full_name: '',
+        phone_number: '',
+        address: '',
+        profession: ''
     });
 
     const token = localStorage.getItem('village_app_token');
@@ -149,7 +164,17 @@ export default function Profile() {
         }
     };
 
-    useEffect(() => { fetchFamily(); }, []);
+    useEffect(() => {
+        fetchFamily();
+        if (user) {
+            setEditProfileData({
+                full_name: user.full_name || '',
+                phone_number: user.phone_number || '',
+                address: user.address || '',
+                profession: user.profession || ''
+            });
+        }
+    }, [user]);
 
     const handleAdd = async (e) => {
         e.preventDefault();
@@ -179,6 +204,29 @@ export default function Profile() {
         }
     };
 
+    const handleUpdateProfile = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsSubmitting(true);
+        try {
+            const res = await fetch(`${API_URL}/auth/me`, {
+                method: 'PATCH',
+                headers,
+                body: JSON.stringify(editProfileData)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Failed to update profile');
+            }
+            await refreshUser();
+            setShowEditModal(false);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const handleDelete = async (id) => {
         if (!confirm('Remove this family member?')) return;
         try {
@@ -189,42 +237,116 @@ export default function Profile() {
         }
     };
 
+    // Pinch to zoom logic
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            setLastTouchDistance(dist);
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (e.touches.length === 2 && lastTouchDistance) {
+            const dist = Math.hypot(
+                e.touches[0].pageX - e.touches[1].pageX,
+                e.touches[0].pageY - e.touches[1].pageY
+            );
+            const delta = dist - lastTouchDistance;
+
+            // Adjust sensitivity
+            if (Math.abs(delta) > 2) {
+                setZoomScale(s => {
+                    const next = s + delta * 0.005;
+                    return Math.min(Math.max(next, 0.2), 1.5);
+                });
+                setLastTouchDistance(dist);
+            }
+        }
+    };
+
+    const handleTouchEnd = () => {
+        setLastTouchDistance(null);
+    };
+
+    const resetView = () => {
+        setZoomScale(0.85);
+        setDragPosition({ x: 0, y: 0 });
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="max-w-7xl mx-auto">
                 {/* Profile Header */}
-                <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl overflow-hidden mb-8 border border-white/20 dark:border-gray-700/30">
-                    <div className="h-32 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 relative">
-                        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRoLTJ2LTRoMnYtNGgydjRoNHYySDR2NGgtMnYtNHptLTIyIDBoLTJ2LTRoMnYtNGgydjRoNHYySDR2NGgtMnYtNHoiLz48L2c+PC9nPg')] opacity-30"></div>
+                <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl overflow-hidden mb-12 border border-white dark:border-gray-700/50 relative">
+                    {/* Background Image Container */}
+                    <div className="h-48 sm:h-64 bg-[url('/vishwakarma_profile.webp')] bg-cover bg-top relative overflow-hidden">
+                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent"></div>
                     </div>
-                    <div className="relative px-8 pb-8">
-                        <div className="-mt-16 flex flex-col sm:flex-row items-center sm:items-end gap-6">
+
+                    <div className="relative px-6 sm:px-10 lg:px-12 pb-10">
+                        <div className="-mt-20 sm:-mt-24 flex flex-col lg:flex-row items-center lg:items-end gap-6 lg:gap-10">
                             <div className="relative group">
-                                <img
-                                    src={user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user?.name}
-                                    alt={user?.name}
-                                    className="w-32 h-32 rounded-3xl border-4 border-white dark:border-gray-800 shadow-2xl bg-white dark:bg-gray-700 object-cover"
-                                />
-                                <div className="absolute inset-0 rounded-3xl bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                <motion.div
+                                    whileHover={{ scale: 1.02 }}
+                                    className="relative"
+                                >
+                                    <img
+                                        src={user?.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user?.name}
+                                        alt={user?.name}
+                                        className="w-36 h-36 sm:w-44 sm:h-44 rounded-[2.5rem] border-8 border-white dark:border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-white dark:bg-gray-700 object-cover relative z-10"
+                                    />
+                                    <div className="absolute -inset-2 bg-linear-to-tr from-blue-500 to-purple-500 rounded-[2.8rem] blur-xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                                </motion.div>
+
+                                <span className={`absolute bottom-3 right-3 w-7 h-7 rounded-full border-4 border-white dark:border-gray-800 shadow-sm z-20 ${user?.status === 'member' ? 'bg-green-500' : 'bg-amber-500'}`}></span>
                             </div>
-                            <div className="text-center sm:text-left flex-1 pt-2">
-                                <h1 className="text-3xl font-black bg-linear-to-br from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">{user?.name}</h1>
-                                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-6 gap-y-2 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    <span className="flex items-center gap-1.5 font-medium"><Mail className="w-4 h-4 text-blue-500" />{user.email || "No email"}</span>
-                                    {user.phone_number && <span className="flex items-center gap-1.5 font-medium"><Phone className="w-4 h-4 text-green-500" />{user.phone_number}</span>}
-                                    <span className="flex items-center gap-1.5 font-medium"><MapPin className="w-4 h-4 text-rose-500" />{user.village?.name || "Village Not Set"}</span>
-                                </div>
-                                <div className="mt-4 flex items-center justify-center sm:justify-start gap-3">
-                                    <div className="font-mono text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-200 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-600">
-                                        ID: <span className="font-bold">{user.sabhasad_id || "PENDING"}</span>
-                                    </div>
-                                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${user?.status === 'member' ? 'bg-green-500 text-white'
-                                        : user?.status === 'pending' ? 'bg-amber-500 text-white'
-                                            : 'bg-gray-500 text-white'
-                                        }`}>
+
+                            <div className="text-center lg:text-left flex-1 pt-4 self-center lg:self-end">
+                                <div className="flex flex-col lg:flex-row items-center lg:items-baseline gap-3 mb-2">
+                                    <h1 className="text-4xl sm:text-5xl font-black text-black dark:text-white tracking-tight leading-none">
+                                        {user?.full_name}
+                                    </h1>
+                                    <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
                                         {user?.status}
                                     </span>
                                 </div>
+
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 mt-4 text-sm font-semibold text-gray-500 dark:text-gray-400">
+                                    <span className="flex items-center gap-2 group cursor-default">
+                                        <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-500/10 group-hover:text-blue-500 transition-colors">
+                                            <Mail className="w-4 h-4" />
+                                        </div>
+                                        {user.email || "No email"}
+                                    </span>
+                                    {user.phone_number && (
+                                        <span className="flex items-center gap-2 group cursor-default">
+                                            <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-green-500/10 group-hover:text-green-500 transition-colors">
+                                                <Phone className="w-4 h-4" />
+                                            </div>
+                                            {user.phone_number}
+                                        </span>
+                                    )}
+                                    <span className="flex items-center gap-2 group cursor-default">
+                                        <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 group-hover:bg-rose-500/10 group-hover:text-rose-500 transition-colors">
+                                            <MapPin className="w-4 h-4" />
+                                        </div>
+                                        {user.village?.name || "Village Not Set"}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 pb-2 pt-4 lg:pt-0">
+                                <Button
+                                    onClick={() => setShowEditModal(true)}
+                                    variant="outline"
+                                    className="rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 h-14 px-8 font-bold shadow-sm shrink-0"
+                                >
+                                    <Edit2 className="w-4 h-4 mr-2" />
+                                    Edit Profile
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -262,7 +384,13 @@ export default function Profile() {
                     </div>
 
                     {/* Tree visualization with Zoom/Pan */}
-                    <div className="flex-1 relative overflow-hidden bg-gray-50/50 dark:bg-gray-900/30 touch-none cursor-grab active:cursor-grabbing">
+                    <div
+                        ref={containerRef}
+                        className="flex-1 relative overflow-hidden bg-gray-50/50 dark:bg-gray-900/30 touch-none cursor-grab active:cursor-grabbing"
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                    >
                         {loading ? (
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
@@ -271,14 +399,26 @@ export default function Profile() {
                             <>
                                 <motion.div
                                     drag
-                                    dragConstraints={{ left: -1500, right: 1500, top: -1500, bottom: 1500 }}
-                                    style={{
+                                    dragConstraints={containerRef}
+                                    dragElastic={0}
+                                    dragTransition={{ power: 0.1, timeConstant: 200 }}
+                                    animate={{
                                         scale: zoomScale,
-                                        transformOrigin: 'top center'
+                                        x: dragPosition.x,
+                                        y: dragPosition.y
                                     }}
-                                    className="absolute left-0 right-0 top-12 flex justify-center p-8 transition-none"
+                                    onDragEnd={(e, info) => {
+                                        setDragPosition({
+                                            x: dragPosition.x + info.offset.x,
+                                            y: dragPosition.y + info.offset.y
+                                        });
+                                    }}
+                                    style={{
+                                        transformOrigin: 'center center'
+                                    }}
+                                    className="absolute inset-0 flex items-start justify-center p-8 pt-12"
                                 >
-                                    <div className="min-w-fit">
+                                    <div className="min-w-fit flex flex-col items-center justify-center">
                                         <TreeNode node={tree} onDelete={handleDelete} />
                                     </div>
                                 </motion.div>
@@ -295,27 +435,28 @@ export default function Profile() {
                                         onClick={() => setZoomScale(s => Math.max(s - 0.1, 0.2))}
                                         className="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                                     >
-                                        <Trash2 className="w-5 h-5 rotate-45" style={{ transform: 'rotate(45deg)' }} /> {/* Using Trash2 rotated as a minus since I need a simple minus */}
-                                        <div className="w-4 h-0.5 bg-current absolute rounded-full" /> {/* Simpler minus */}
+                                        <Trash2 className="w-5 h-5 rotate-45" style={{ transform: 'rotate(45deg)' }} />
+                                        <div className="w-4 h-0.5 bg-current absolute rounded-full" />
                                     </button>
                                     <button
-                                        onClick={() => setZoomScale(0.85)}
-                                        className="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors font-black text-xs"
+                                        onClick={resetView}
+                                        title="Reset View"
+                                        className="w-10 h-10 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
                                     >
-                                        1:1
+                                        <RotateCcw className="w-5 h-5" />
                                     </button>
                                 </div>
 
-                                <div className="absolute bottom-6 left-6 text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 pointer-events-none">
-                                    <div className="flex gap-1">
+                                <div className="absolute bottom-6 left-6 text-[10px] font-black uppercase tracking-widest text-gray-400 grid grid-col-2 gap-2 pointer-events-none">
+                                    <div className="flex gap-1 items-center">
                                         <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                                         <span>Male</span>
                                     </div>
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-1 items-center">
                                         <div className="w-2 h-2 rounded-full bg-pink-500"></div>
                                         <span>Female</span>
                                     </div>
-                                    <span className="ml-2">• Pinch or drag to navigate</span>
+                                    <span>• Pinch or drag to navigate</span>
                                 </div>
                             </>
                         ) : (
@@ -459,6 +600,105 @@ export default function Profile() {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+
+            {/* Edit Profile Modal */}
+            <AnimatePresence>
+                {showEditModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl max-w-lg w-full p-10 relative border border-white/20 dark:border-gray-700/30"
+                        >
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                className="absolute top-8 right-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+
+                            <div className="mb-10">
+                                <h2 className="text-3xl font-black text-black dark:text-white mb-2">Edit Profile</h2>
+                                <p className="text-sm text-gray-500">Update your personal information</p>
+                            </div>
+
+                            {error && (
+                                <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400 text-sm flex items-center gap-3">
+                                    <AlertCircle className="w-5 h-5 shrink-0" />
+                                    {error}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleUpdateProfile} className="space-y-6">
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Full Name</label>
+                                    <input
+                                        type="text" required
+                                        value={editProfileData.full_name}
+                                        onChange={(e) => setEditProfileData({ ...editProfileData, full_name: e.target.value })}
+                                        className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Phone Number</label>
+                                        <input
+                                            type="text"
+                                            value={editProfileData.phone_number}
+                                            onChange={(e) => setEditProfileData({ ...editProfileData, phone_number: e.target.value })}
+                                            className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
+                                        <input
+                                            type="text"
+                                            value={editProfileData.profession}
+                                            onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
+                                            className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                                    <textarea
+                                        rows="3"
+                                        value={editProfileData.address}
+                                        onChange={(e) => setEditProfileData({ ...editProfileData, address: e.target.value })}
+                                        className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold resize-none"
+                                    />
+                                </div>
+
+                                <div className="flex gap-4 pt-4">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setShowEditModal(false)}
+                                        className="flex-1 py-4 rounded-2xl font-bold h-14"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        type="submit"
+                                        disabled={isSubmitting}
+                                        className="flex-1 py-4 bg-black hover:bg-gray-900 text-white rounded-2xl font-black h-14 shadow-xl shadow-black/10"
+                                    >
+                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save Changes'}
+                                    </Button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div >
     );
 }

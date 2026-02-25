@@ -354,7 +354,7 @@ export default function Dashboard() {
             <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-5' : 'lg:grid-cols-1'} gap-6 sm:gap-8`}>
                 {/* Chart */}
                 <div className={`${user?.role === 'admin' ? 'lg:col-span-3' : ''} min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-auto lg:h-[420px]`}>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 flex-shrink-0">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 shrink-0">
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Donations Trend (INR vs Date)</h3>
                         <div className="flex flex-wrap items-center gap-2">
                             <select
@@ -614,7 +614,7 @@ export default function Dashboard() {
                                             <img
                                                 src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random&size=48`}
                                                 alt={member.full_name}
-                                                className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700 flex-shrink-0"
+                                                className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700 shrink-0"
                                             />
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2 mb-1">
@@ -697,20 +697,20 @@ export default function Dashboard() {
             {user?.role === 'admin' && (
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 col-start-2 mt-8">
                     <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                            <MapPin className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                             Village Management
                         </h3>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-gray-500">{villages.length} villages</span>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <span className="hidden sm:inline text-sm text-gray-500">{villages.length} villages</span>
                             <Button
                                 size="sm"
                                 variant={showAddVillageForm ? "outline" : "default"}
                                 onClick={() => setShowAddVillageForm(!showAddVillageForm)}
-                                className="gap-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                                className="px-2 sm:px-3 gap-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                             >
                                 {showAddVillageForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                                {showAddVillageForm ? 'Cancel' : 'Add Village'}
+                                <span className="hidden sm:inline">{showAddVillageForm ? 'Cancel' : 'Add Village'}</span>
                             </Button>
                         </div>
                     </div>
@@ -747,7 +747,7 @@ export default function Dashboard() {
                     {/* Villages List */}
                     <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                         {villages.map(village => (
-                            <div key={village.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors gap-3">
+                            <div key={village.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors gap-3">
                                 {editingVillageId === village.id ? (
                                     <div className="flex-1 flex flex-col sm:flex-row gap-2">
                                         <input

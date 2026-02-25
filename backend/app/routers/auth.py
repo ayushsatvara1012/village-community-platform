@@ -134,6 +134,19 @@ def login_for_access_token(
 @router.get("/users/me", response_model=schemas.UserResponse)
 async def read_users_me(current_user: Annotated[models.User, Depends(get_current_user)]):
     return current_user
+@router.patch("/me", response_model=schemas.UserResponse)
+async def update_user_me(
+    user_update: schemas.UserUpdate,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+    db: Session = Depends(database.get_db)
+):
+    update_data = user_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(current_user, key, value)
+    
+    db.commit()
+    db.refresh(current_user)
+    return current_user
 
 
 # ─── User OTP Login ──────────────────────────────────────────
