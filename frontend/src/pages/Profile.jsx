@@ -61,7 +61,7 @@ function TreeNode({ node, onDelete, depth = 0 }) {
                 </div>
 
                 {/* Delete button — hidden for Self */}
-                {!isSelf && (
+                {!isSelf && onDelete && (
                     <button
                         onClick={() => onDelete(node.id)}
                         className="absolute -top-2 -right-2 w-7 h-7 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center opacity-100 transition-all shadow-lg active:scale-95"

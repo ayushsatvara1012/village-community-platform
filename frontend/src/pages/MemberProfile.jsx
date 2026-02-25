@@ -10,7 +10,7 @@ import {
 
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
-function TreeNode({ node, depth = 0, onDelete }) {
+function TreeNode({ node, depth = 0 }) {
     const [expanded, setExpanded] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
     const isSelf = node.relation === 'Self';
@@ -70,16 +70,6 @@ function TreeNode({ node, depth = 0, onDelete }) {
                     </a>
                 )}
 
-                {/* Delete button (for admins) */}
-                {onDelete && !isSelf && (
-                    <button
-                        onClick={() => onDelete(node.id)}
-                        className="absolute -top-2 -right-2 w-7 h-7 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg active:scale-95"
-                        title="Remove member"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                )}
 
                 {/* Expand toggle */}
                 {hasChildren && (
@@ -107,7 +97,7 @@ function TreeNode({ node, depth = 0, onDelete }) {
                                     </div>
                                 )}
                                 <div className="w-0.5 h-8 bg-gray-300 dark:bg-gray-600 z-10"></div>
-                                <TreeNode node={child} depth={depth + 1} onDelete={onDelete} />
+                                <TreeNode node={child} depth={depth + 1} />
                             </div>
                         ))}
                     </div>
@@ -179,20 +169,6 @@ export default function MemberProfile() {
         fetchProfileData();
     }, [id]);
 
-    const handleDelete = async (memberId) => {
-        if (!confirm('Remove this family member?')) return;
-        try {
-            const res = await fetch(`${API_URL}/family/${memberId}`, { method: 'DELETE', headers });
-            if (res.ok) {
-                await fetchProfileData();
-            } else {
-                const err = await res.json();
-                alert(`Failed to delete: ${err.detail || 'Unknown error'}`);
-            }
-        } catch (err) {
-            console.error('Delete failed:', err);
-        }
-    };
 
     const handleTouchStart = (e) => {
         if (e.touches.length === 2) {
@@ -224,7 +200,6 @@ export default function MemberProfile() {
         setDragPosition({ x: 0, y: 0 });
     };
 
-    const canDelete = currentUser && (currentUser.role === 'admin' || currentUser.id === parseInt(id));
 
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900"><Loader2 className="w-10 h-10 animate-spin text-blue-600" /></div>;
@@ -370,7 +345,7 @@ export default function MemberProfile() {
                                     style={{ transformOrigin: 'center center' }}
                                 >
                                     <div className="min-w-fit flex flex-col items-center justify-center">
-                                        <TreeNode node={tree} onDelete={canDelete ? handleDelete : undefined} />
+                                        <TreeNode node={tree} />
                                     </div>
                                 </motion.div>
 

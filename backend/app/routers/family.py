@@ -178,7 +178,7 @@ def delete_family_member(
     if not member:
         raise HTTPException(status_code=404, detail="Family member not found")
         
-    if member.user_id != current_user.id and current_user.role != "admin":
+    if member.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this family member")
 
     # Move children to root level
