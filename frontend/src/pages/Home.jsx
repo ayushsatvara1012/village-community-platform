@@ -177,7 +177,7 @@ export default function Home() {
                                 title: "Samuh Lagan (Group Marriages)",
                                 desc: "Our flagship initiative aims to simplify marriages and reduce financial burdens on families. By organizing mass marriage ceremonies, we celebrate unity and promote the traditional values of community support and simplicity.",
                                 icon: Users,
-                                image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=2574&auto=format&fit=crop",
+                                image: "https://d1zpvjny0s6omk.cloudfront.net/media/fileupload/2015/09/28/PYE_3523.jpg",
                                 color: "blue",
                                 stats: "500+ Couples Blessed",
                                 accent: "border-blue-500/30 bg-blue-500/5"
