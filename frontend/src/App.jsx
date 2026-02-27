@@ -16,6 +16,7 @@ import MemberProfile from './pages/MemberProfile';
 import PayMembership from './pages/PayMembership';
 import NotFound from './pages/NotFound';
 import Villages from './pages/Villages';
+import History from './pages/History';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 
@@ -55,6 +56,7 @@ function App() {
                             <Route path="/forgot-password" element={<ForgotPassword />} />
                             <Route path="/admin-login" element={<AdminLogin />} />
                             <Route path="/donate" element={<Donate />} />
+                            <Route path="/history" element={<History />} />
 
                             {/* Pending users: can fill application */}
                             <Route path="/apply" element={

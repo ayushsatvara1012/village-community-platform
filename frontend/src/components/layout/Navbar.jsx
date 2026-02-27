@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../ui/Button';
-import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard, MapPin } from 'lucide-react';
+import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard, MapPin, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -13,6 +13,7 @@ export function Navbar() {
     const getNavLinks = () => {
         const links = [
             { name: 'Home', path: '/', icon: Home },
+            { name: 'History', path: '/history', icon: BookOpen },
             { name: 'Villages', path: '/villages', icon: MapPin }
         ];
 
@@ -181,7 +182,7 @@ export function Navbar() {
                                     </Link>
                                 )}
                                 <div className="px-3 py-2">
-                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={()=>{logout(); setIsOpen(false)}}>
+                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => { logout(); setIsOpen(false) }}>
                                         <LogOut className="w-4 h-4 mr-2" />
                                         Logout
                                     </Button>

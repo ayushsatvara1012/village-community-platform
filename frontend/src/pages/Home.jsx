@@ -1,12 +1,16 @@
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { Calendar, Megaphone, ArrowRight, BookOpen, Heart, Users, Trophy, HandHeart, Sparkles } from 'lucide-react';
 import { FullScreenLoader } from '../components/ui/FullScreenLoader';
 import { Footer } from '../components/layout/Footer';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+    const { user, isAuthenticated } = useAuth();
+    const navigate = useNavigate();
     const [villageCount, setVillageCount] = useState(null);
     const [memberCount, setMemberCount] = useState(null);
     const [imagesLoaded, setImagesLoaded] = useState(false);
@@ -66,12 +70,40 @@ export default function Home() {
                             Uniting {memberCount}+ members under one digital roof. Join us in building a stronger, more connected community.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Button size="lg" className="bg-blue-500 hover:bg-blue-600 text-lg px-8 py-3">
-                                Become a Member
-                            </Button>
-                            <Button variant="outline" className="text-white border-white hover:bg-white/10 text-lg px-8 py-3">
-                                Explore Directory
-                            </Button>
+                            {user?.status === 'member' ? (
+                                <Button
+                                    size="lg"
+                                    className="bg-blue-500 hover:bg-blue-600 text-lg px-8 py-3"
+                                    onClick={() => navigate('/villages')}
+                                >
+                                    Explore Directory
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button
+                                        size="lg"
+                                        className="bg-blue-500 hover:bg-blue-600 text-lg px-8 py-3"
+                                        onClick={() => {
+                                            if (!isAuthenticated) {
+                                                navigate('/register');
+                                            } else if (user.status === 'pending') {
+                                                navigate('/apply');
+                                            } else if (user.status === 'approved') {
+                                                navigate('/pay');
+                                            }
+                                        }}
+                                    >
+                                        Become a Member
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="text-white border-white hover:bg-white/10 text-lg px-8 py-3"
+                                        onClick={() => navigate('/villages')}
+                                    >
+                                        Explore Directory
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </motion.div>
                 </div>
@@ -103,14 +135,19 @@ export default function Home() {
                                 સતવારા સમાજ અને તેનો ભવ્ય ઈતિહાસ
                             </h2>
                             <div className="space-y-4 text-gray-600 dark:text-gray-400 leading-relaxed">
-                                <p>
-                                    The Satvara community, also known as Satvara Kadiya, has a rich cultural and architectural heritage in Gujarat. Traditionally known for their exceptional craftsmanship in stonework and masonry, the community has played a pivotal role in building some of the most iconic structures in our region.
+                                <p className='font-gujarati text-lg'>
+                                    સતવારા સમુદાય, જેને સતવારા કડિયા તરીકે પણ ઓળખવામાં આવે છે, તે ગુજરાતમાં સમૃદ્ધ સાંસ્કૃતિક અને સ્થાપત્ય વારસો ધરાવે છે. પરંપરાગત રીતે પથ્થરકામ અને ચણતરમાં તેમની અસાધારણ કારીગરી માટે જાણીતા, આ સમુદાયે આપણા પ્રદેશમાં કેટલીક સૌથી પ્રતિષ્ઠિત રચનાઓના નિર્માણમાં મુખ્ય ભૂમિકા ભજવી છે.
                                 </p>
-                                <p>
-                                    Dating back centuries, our ancestors were the backbone of the region's development. Today, while we honor our traditional roots, our community has evolved into a diverse group of professionals, entrepreneurs, and scholars who continue to contribute to the nation's growth while maintaining our cultural values and unity.
+                                <p className='font-gujarati text-lg'>
+                                    સદીઓથી આપણા પૂર્વજો આ પ્રદેશના વિકાસની કરોડરજ્જુ હતા. આજે, જ્યારે આપણે આપણા પરંપરાગત મૂળનું સન્માન કરીએ છીએ, ત્યારે આપણો સમુદાય વ્યાવસાયિકો, ઉદ્યોગસાહસિકો અને વિદ્વાનોના વિવિધ જૂથમાં વિકસિત થયો છે જેઓ આપણા સાંસ્કૃતિક મૂલ્યો અને એકતા જાળવી રાખીને રાષ્ટ્રના વિકાસમાં યોગદાન આપી રહ્યા છે.
                                 </p>
                             </div>
-                            <Button className="mt-8 bg-orange-600 hover:bg-orange-700">Read More History</Button>
+                            <Button
+                                className="mt-8 bg-orange-600 hover:bg-orange-700"
+                                onClick={() => navigate('/history')}
+                            >
+                                સમગ્ર ઇતિહાસ
+                            </Button>
                         </motion.div>
                         <motion.div
                             initial={{ opacity: 0, x: 50 }}
