@@ -304,15 +304,15 @@ export default function Profile() {
                     <div className="h-48 sm:h-64 bg-[url('/vishwakarma_profile.webp')] bg-cover bg-top relative overflow-hidden">
 
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent"></div>
-                        <div className="absolute left-10 top-5 flex items-center gap-3 z-10">
-                            <div className='px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em]'>
+                        <div className="absolute left-10 top-5 flex items-center gap-3 z-10 max-w-[calc(100%-5rem)] overflow-hidden">
+                            <div className='shrink-0 px-3 py-1 bg-blue-50 dark:bg-blue-800/30 text-blue-600 dark:text-white border border-transparent dark:border-blue-400/40 rounded-full text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-sm'>
                                 {user?.status}
                             </div>
                             <button
                                 onClick={() => setShowEditModal(true)}
-                                className="flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/20 text-green-600 dark:text-green-400 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md transition-all active:scale-95 group shadow-lg"
+                                className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-white/80 hover:bg-white/50 dark:bg-blue-600 dark:hover:bg-blue-600/40 text-blue-600 dark:text-white border border-blue-200/20 dark:border-blue-200/50 rounded-full text-[12px] font-black uppercase tracking-wide backdrop-blur-md transition-all active:scale-95 group"
                             >
-                                <Edit2 className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                                <Edit2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                             </button>
                         </div>
                     </div>
@@ -701,15 +701,6 @@ export default function Profile() {
                                             />
                                         </div>
                                         <div className="space-y-1.5">
-                                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
-                                            <input
-                                                type="text"
-                                                value={editProfileData.profession}
-                                                onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
-                                                className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
-                                            />
-                                        </div>
-                                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
                                             <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Birth Date</label>
                                             <div className="relative">
                                                 <input
@@ -722,6 +713,15 @@ export default function Profile() {
                                                     {editProfileData.date_of_birth ? formatDate(editProfileData.date_of_birth) : <span className="text-gray-400">DD/MM/YYYY</span>}
                                                 </div>
                                             </div>
+                                        </div>
+                                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
+                                            <input
+                                                type="text"
+                                                value={editProfileData.profession}
+                                                onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
+                                                className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                            />
                                         </div>
                                     </div>
 

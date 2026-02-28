@@ -116,7 +116,7 @@ export default function Login() {
             {/* Left Side - Text & Intro */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden z-10">
                 <div className="relative z-10 flex flex-col justify-center px-8 xl:px-16 text-white h-full">
-                    <h1 className="text-4xl xl:text-5xl font-gujarati mb-4 xl:mb-6">સતવારા કડિયા <span className='text-orange-600 font-bold'>પ્રગતિ મંડળ</span></h1>
+                    <h1 className="text-4xl xl:text-5xl font-gujarati mb-4 xl:mb-6">શ્રી સથવારા કડિયા <span className='text-orange-500 font-bold'>પ્રગતિ મંડળ</span></h1>
                     <p className="text-lg xl:text-xl text-blue-100 max-w-lg">
                         Access your community dashboard, connect with members, and stay updated with the latest village news.
                     </p>
