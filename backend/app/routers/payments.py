@@ -4,9 +4,16 @@ from sqlalchemy import func, Date, Integer, extract
 from typing import List, Annotated
 from pydantic import BaseModel
 from .. import models, schemas, database
-from ..config import razorpay_client, RAZORPAY_KEY_ID
+from ..config import razorpay_client, razorpay_client_special, RAZORPAY_KEY_ID, RAZORPAY_KEY_ID_SPECIAL
 from .auth import get_current_user
 import uuid
+import io
+from fastapi.responses import Response
+from reportlab.lib.pagesizes import A5
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.units import cm
 
 router = APIRouter(
     prefix="/payments",
@@ -189,6 +196,148 @@ def verify_payment(
     db.commit()
     db.refresh(db_payment)
     return db_payment
+
+# ─── Special Welfare Fund ─────────────────────────────────
+
+@router.post("/special/create-order")
+def create_special_order(
+    order: CreateOrderRequest,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+):
+    """Create a Razorpay order for the Special Welfare Fund using the special client."""
+    if order.amount <= 0:
+        raise HTTPException(status_code=400, detail="Amount must be positive")
+
+    amount_in_paise = int(order.amount * 100)
+
+    try:
+        order_data = {
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "receipt": f"SPF-{uuid.uuid4().hex[:8]}",
+            "notes": {
+                "user_id": str(current_user.id),
+                "purpose": "special_fund"
+            }
+        }
+        # Use the special client for this fund
+        razorpay_order = razorpay_client_special.order.create(data=order_data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create special fund order: {str(e)}")
+
+    return {
+        "order_id": razorpay_order["id"],
+        "amount": order.amount,
+        "currency": "INR",
+        "purpose": "special_fund",
+        "razorpay_key_id": RAZORPAY_KEY_ID_SPECIAL,
+    }
+
+@router.post("/special/verify", response_model=schemas.Payment)
+def verify_special_payment(
+    payment: VerifyPaymentRequest,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+    db: Session = Depends(database.get_db)
+):
+    """Verify special fund payment using the special client."""
+    try:
+        # Use the special client to verify
+        razorpay_client_special.utility.verify_payment_signature({
+            "razorpay_order_id": payment.razorpay_order_id,
+            "razorpay_payment_id": payment.razorpay_payment_id,
+            "razorpay_signature": payment.razorpay_signature
+        })
+    except Exception:
+        raise HTTPException(status_code=400, detail="Payment verification failed. Invalid signature.")
+
+    db_payment = models.Payment(
+        user_id=current_user.id,
+        amount=payment.amount,
+        transaction_id=payment.razorpay_payment_id,
+        status="completed",
+        purpose="special_fund"
+    )
+    db.add(db_payment)
+    db.commit()
+    db.refresh(db_payment)
+    return db_payment
+
+# ─── Receipts ─────────────────────────────────────────────
+
+@router.get("/{payment_id}/receipt")
+def get_payment_receipt(
+    payment_id: int,
+    db: Session = Depends(database.get_db)
+):
+    """Generate a professional PDF receipt for a payment. Publicly accessible."""
+    payment = db.query(models.Payment).filter(models.Payment.id == payment_id).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment record not found")
+    
+    user = db.query(models.User).filter(models.User.id == payment.user_id).first()
+    donor_name = user.full_name if user else "Community Supporter"
+
+    # Create PDF in memory
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A5, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'TitleStyle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor("#1e293b"),
+        alignment=1, # Center
+        spaceAfter=20
+    )
+    
+    content_list = []
+    
+    # Header
+    content_list.append(Paragraph("Village Community Platform", title_style))
+    content_list.append(Paragraph("Official Donation Receipt", styles['Normal']))
+    content_list.append(Spacer(1, 0.5*cm))
+    
+    # Receipt Details Table
+    data = [
+        ["Receipt No:", f"REC-{payment.id:06d}"],
+        ["Date:", payment.created_at.strftime("%d/%m/%Y") if payment.created_at else "—"],
+        ["Transaction ID:", payment.transaction_id],
+        ["Donor Name:", donor_name],
+        ["Purpose:", payment.purpose.replace("_", " ").title() if payment.purpose else "Donation"],
+        ["Amount:", f"INR {payment.amount:,.2f}"],
+    ]
+    
+    table = Table(data, colWidths=[4*cm, 7*cm])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0,0), (-1,-1), 'Helvetica'),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('TEXTCOLOR', (0,0), (0,-1), colors.HexColor("#64748b")),
+        ('ALIGN', (0,0), (-1,-1), 'LEFT'),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 12),
+        ('LINEBELOW', (0,0), (-1,-1), 0.5, colors.HexColor("#e2e8f0")),
+    ]))
+    content_list.append(table)
+    content_list.append(Spacer(1, 1*cm))
+    
+    # Footer
+    footer_text = "This is a computer generated receipt. Thank you for your generous contribution to our community welfare projects. Your support helps us build a better future together."
+    content_list.append(Paragraph(footer_text, ParagraphStyle('Footer', parent=styles['Normal'], fontSize=9, leading=12, textColor=colors.grey)))
+    
+    content_list.append(Spacer(1, 1*cm))
+    content_list.append(Paragraph("<b>Authorized Signature</b>", ParagraphStyle('Sign', parent=styles['Normal'], alignment=2)))
+
+    # Build PDF
+    doc.build(content_list)
+    
+    pdf_out = buffer.getvalue()
+    buffer.close()
+    
+    return Response(
+        content=pdf_out,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=receipt_{payment.id}.pdf"}
+    )
 
 from typing import Optional
 from datetime import date

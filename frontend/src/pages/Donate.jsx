@@ -8,6 +8,7 @@ export default function Donate() {
     const [events, setEvents] = useState([]);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showGeneralDonate, setShowGeneralDonate] = useState(false);
+    const [showSpecialDonate, setShowSpecialDonate] = useState(false);
     const [donationAmount, setDonationAmount] = useState('');
     const [isDonating, setIsDonating] = useState(false);
     const [donationSuccess, setDonationSuccess] = useState(false);
@@ -28,6 +29,23 @@ export default function Donate() {
             .then(res => res.json())
             .then(data => setEvents(data))
             .catch(err => console.error("Failed to fetch events:", err));
+    };
+
+    const getImageUrl = (url) => {
+        if (!url) return '';
+        // If it starts with http, it might be a legacy hardcoded 127.0.0.1 or a placeholder
+        if (url.startsWith('http')) {
+            // Fix legacy hardcoded 127.0.0.1 by replacing it with current API_URL
+            if (url.includes('127.0.0.1:8000')) {
+                return url.replace('http://127.0.0.1:8000', API_URL);
+            }
+            return url;
+        }
+        // If it's a relative path starting with /, prepend API_URL
+        if (url.startsWith('/')) {
+            return `${API_URL}${url}`;
+        }
+        return url;
     };
 
     useEffect(() => {
@@ -187,6 +205,59 @@ export default function Donate() {
 
         } catch (error) {
             console.error('General donation error:', error);
+            setError(error.message || 'Something went wrong.');
+            setIsDonating(false);
+        }
+    };
+
+    const handleSpecialDonate = async () => {
+        const amount = parseFloat(donationAmount);
+        if (!amount || amount <= 0) return setError('Please enter a valid amount.');
+        setError('');
+        setIsDonating(true);
+
+        const token = localStorage.getItem('village_app_token');
+
+        try {
+            const orderRes = await fetch(`${API_URL}/payments/special/create-order`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ amount }),
+            });
+
+            if (!orderRes.ok) {
+                const errData = await orderRes.json();
+                throw new Error(errData.detail || 'Failed to create payment order');
+            }
+
+            const orderData = await orderRes.json();
+
+            openRazorpayCheckout(orderData, 'Special Welfare Fund — Village Community', async (response, tkn) => {
+                const verifyRes = await fetch(`${API_URL}/payments/special/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${tkn}`
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        amount: amount,
+                    }),
+                });
+
+                if (!verifyRes.ok) {
+                    const errData = await verifyRes.json();
+                    throw new Error(errData.detail || 'Payment verification failed');
+                }
+            });
+
+        } catch (error) {
+            console.error('Special donation error:', error);
             setError(error.message || 'Something went wrong.');
             setIsDonating(false);
         }
@@ -362,13 +433,14 @@ export default function Donate() {
     };
 
     // Is any modal open?
-    const isModalOpen = selectedEvent || showGeneralDonate;
-    const modalTitle = selectedEvent ? `Donate to ${selectedEvent.title}` : 'General Donation';
-    const currentHandler = selectedEvent ? handleDonate : handleGeneralDonate;
+    const isModalOpen = selectedEvent || showGeneralDonate || showSpecialDonate;
+    const modalTitle = selectedEvent ? `Donate to ${selectedEvent.title}` : (showSpecialDonate ? 'Community Welfare Fund' : 'General Donation');
+    const currentHandler = selectedEvent ? handleDonate : (showSpecialDonate ? handleSpecialDonate : handleGeneralDonate);
 
     const closeModal = () => {
         setSelectedEvent(null);
         setShowGeneralDonate(false);
+        setShowSpecialDonate(false);
         setError('');
         setDonationAmount('');
     };
@@ -388,14 +460,14 @@ export default function Donate() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="mb-12 bg-gradient-to-br from-rose-600 via-red-600 to-orange-500 rounded-2xl shadow-2xl shadow-red-500/20 p-8 md:p-10 text-white relative overflow-hidden"
+                    className="mb-12 bg-linear-to-br from-rose-600 via-red-600 to-orange-500 rounded-2xl shadow-2xl shadow-red-500/20 p-8 md:p-10 text-white relative overflow-hidden"
                 >
                     {/* Decorative elements */}
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none"></div>
 
                     <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                             <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                                 <HandHeart className="w-10 h-10 text-white" />
                             </div>
@@ -406,13 +478,51 @@ export default function Donate() {
                                 Support our community with a general contribution. Your donation goes towards village development, healthcare, education, and more.
                             </p>
                         </div>
-                        <div className="flex-shrink-0">
+                        <div className="shrink-0">
                             <Button
                                 className="bg-white text-red-600 hover:bg-red-50 border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/10"
                                 onClick={() => { setShowGeneralDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
                             >
                                 <Heart className="w-5 h-5 mr-2 fill-current" />
                                 Donate Now
+                            </Button>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Special Welfare Fund Card — New Fixed Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    className="mb-12 bg-linear-to-br from-indigo-700 via-blue-800 to-cyan-600 rounded-2xl shadow-2xl shadow-blue-500/20 p-8 md:p-10 text-white relative overflow-hidden"
+                >
+                    {/* Decorative elements */}
+                    <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-56 h-56 bg-cyan-400/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none"></div>
+
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                        <div className="shrink-0">
+                            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+                                <Plus className="w-10 h-10 text-white" />
+                            </div>
+                        </div>
+                        <div className="flex-1 text-center md:text-left">
+                            <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                                <h2 className="text-2xl md:text-3xl font-bold italic">Special Welfare Fund</h2>
+                                <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/30 rounded text-xs font-bold uppercase tracking-tighter">Fixed Asset Fund</span>
+                            </div>
+                            <p className="text-blue-100 text-lg max-w-xl">
+                                Dedicated fund for community trust and infrastructure development. These contributions are settled into our primary welfare foundation account.
+                            </p>
+                        </div>
+                        <div className="shrink-0">
+                            <Button
+                                className="bg-indigo-500 hover:bg-indigo-400 text-white border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/20"
+                                onClick={() => { setShowSpecialDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
+                            >
+                                <Heart className="w-5 h-5 mr-2 fill-current" />
+                                Support Fund
                             </Button>
                         </div>
                     </div>
@@ -447,7 +557,7 @@ export default function Donate() {
                             >
                                 <div className="absolute inset-0">
                                     <img
-                                        src={event.image}
+                                        src={getImageUrl(event.image)}
                                         alt={event.title}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
@@ -554,27 +664,33 @@ export default function Donate() {
                             ) : (
                                 <>
                                     <div className="text-center mb-8">
-                                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${showGeneralDonate
-                                            ? 'bg-gradient-to-br from-rose-100 to-orange-100 dark:from-rose-900/20 dark:to-orange-900/20'
-                                            : 'bg-red-50 dark:bg-red-900/20'
+                                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${showSpecialDonate
+                                            ? 'bg-linear-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/20 dark:to-blue-900/20'
+                                            : showGeneralDonate
+                                                ? 'bg-linear-to-br from-rose-100 to-orange-100 dark:from-rose-900/20 dark:to-orange-900/20'
+                                                : 'bg-red-50 dark:bg-red-900/20'
                                             }`}>
-                                            {showGeneralDonate
-                                                ? <HandHeart className="w-8 h-8 text-red-600" />
-                                                : <Heart className="w-8 h-8 text-red-600" />
+                                            {showSpecialDonate
+                                                ? <Plus className="w-8 h-8 text-indigo-600" />
+                                                : showGeneralDonate
+                                                    ? <HandHeart className="w-8 h-8 text-red-600" />
+                                                    : <Heart className="w-8 h-8 text-red-600" />
                                             }
                                         </div>
                                         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{modalTitle}</h2>
                                         <p className="text-gray-500 mt-2">
-                                            {showGeneralDonate
-                                                ? 'Support village development, healthcare & education.'
-                                                : 'Your small contribution makes a big difference.'
+                                            {showSpecialDonate
+                                                ? 'Contributions here go directly to the community welfare foundation.'
+                                                : showGeneralDonate
+                                                    ? 'Support village development, healthcare & education.'
+                                                    : 'Your small contribution makes a big difference.'
                                             }
                                         </p>
                                     </div>
 
                                     {error && (
                                         <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
-                                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                            <AlertCircle className="w-4 h-4 shrink-0" />
                                             {error}
                                         </div>
                                     )}
@@ -661,7 +777,7 @@ export default function Donate() {
 
                             {error && (
                                 <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
-                                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
                                     {error}
                                 </div>
                             )}

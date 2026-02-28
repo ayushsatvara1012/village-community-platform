@@ -161,6 +161,21 @@ export default function Dashboard() {
         fetchDonations(donationsOffset + 10, donationFilter);
     };
 
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '—';
+        try {
+            const cleanDate = dateStr.split('T')[0];
+            const parts = cleanDate.split('-');
+            if (parts.length === 3) {
+                const [y, m, d] = parts;
+                return `${d}/${m}/${y}`;
+            }
+            return dateStr;
+        } catch (e) {
+            return dateStr;
+        }
+    };
+
     if (isLoadingStats || isLoadingVillages || isLoadingMembers || isLoadingPending) {
         return <FullScreenLoader message="Loading dashboard data..." />;
     }
@@ -568,9 +583,22 @@ export default function Dashboard() {
                                         <span className="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full capitalize">
                                             {donation.purpose.replace('_', ' ')}
                                         </span>
-                                        <span>
-                                            {new Date(donation.created_at).toLocaleDateString()}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <a
+                                                href={`${(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com')}/payments/${donation.id}/receipt`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                                title="Download Receipt"
+                                            >
+                                                <Download className="w-3 h-3" />
+                                                <span>Receipt</span>
+                                            </a>
+                                            <span className="text-gray-300 dark:text-gray-600">•</span>
+                                            <span>
+                                                {new Date(donation.created_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -629,6 +657,8 @@ export default function Dashboard() {
                                                     <span>{member.phone_number || 'No Phone'}</span>
                                                     <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
                                                     <span className="truncate">{member.profession || '—'}</span>
+                                                    <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
+                                                    <span className="truncate">{formatDate(member.date_of_birth)}</span>
                                                 </div>
                                             </div>
                                         </div>

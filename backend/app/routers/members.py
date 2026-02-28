@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional, Annotated
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel
 from .. import models, schemas, database
 from .auth import get_current_user
@@ -15,7 +15,7 @@ class MembershipApplication(BaseModel):
     village_id: int
     address: Optional[str] = None
     profession: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
+    date_of_birth: Optional[date] = None
 
 class AdminAction(BaseModel):
     comment: Optional[str] = None
@@ -138,3 +138,22 @@ def reject_member(
     db.delete(user)
     db.commit()
     return {"message": "Application rejected and user removed successfully"}
+@router.put("/{member_id}/position", response_model=schemas.UserResponse)
+def update_member_position(
+    member_id: int,
+    position_data: schemas.UserPositionUpdate,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+    db: Session = Depends(database.get_db)
+):
+    """Update a member's official position. Admin only."""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    user = db.query(models.User).filter(models.User.id == member_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Member not found")
+
+    user.position = position_data.position
+    db.commit()
+    db.refresh(user)
+    return user

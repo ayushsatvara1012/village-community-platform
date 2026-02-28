@@ -40,7 +40,7 @@ async def upload_event_image(
     with open(file_path, "wb") as f:
         f.write(await file.read())
         
-    return {"url": f"http://127.0.0.1:8000/static/{unique_filename}"}
+    return {"url": f"/static/{unique_filename}"}
 
 @router.get("/", response_model=List[schemas.DonationEvent])
 def list_events(db: Session = Depends(database.get_db)):

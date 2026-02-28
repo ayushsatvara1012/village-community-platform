@@ -10,4 +10,9 @@ load_dotenv()
 RAZORPAY_KEY_ID = os.getenv("RAZORPAY_KEY_ID", "rzp_test_1DP5mmOlF5G5ag")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "thiswillbesetlater")
 
+# Special Welfare Fund Keys (Heads-up: In production these should be different)
+RAZORPAY_KEY_ID_SPECIAL = os.getenv("RAZORPAY_KEY_ID_SPECIAL", RAZORPAY_KEY_ID)
+RAZORPAY_KEY_SECRET_SPECIAL = os.getenv("RAZORPAY_KEY_SECRET_SPECIAL", RAZORPAY_KEY_SECRET)
+
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+razorpay_client_special = razorpay.Client(auth=(RAZORPAY_KEY_ID_SPECIAL, RAZORPAY_KEY_SECRET_SPECIAL))

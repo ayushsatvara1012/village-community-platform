@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float, DateTime, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from .database import Base
@@ -24,9 +24,10 @@ class User(Base):
     role = Column(String, default="user") # user, admin
     status = Column(String, default="pending") # pending, approved, member, rejected
     profession = Column(String, nullable=True)
-    date_of_birth = Column(DateTime, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
     admin_comment = Column(String, nullable=True) # Admin approval/rejection comment
     sabhasad_id = Column(String, unique=True, nullable=True, index=True) # Assigned after payment
+    position = Column(String, nullable=True) # E.g., President, Secretary, etc.
     village_id = Column(Integer, ForeignKey("villages.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

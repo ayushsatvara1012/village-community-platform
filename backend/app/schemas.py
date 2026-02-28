@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 
 class VillageBase(BaseModel):
     name: str
@@ -27,7 +27,7 @@ class UserBase(BaseModel):
     address: Optional[str] = None
     village_id: Optional[int] = None
     profession: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
+    date_of_birth: Optional[date] = None
 
 class UserCreate(UserBase):
     password: str
@@ -39,6 +39,7 @@ class UserResponse(UserBase):
     profession: Optional[str] = None
     admin_comment: Optional[str] = None
     sabhasad_id: Optional[str] = None
+    position: Optional[str] = None
     created_at: datetime
     village: Optional[Village] = None
     
@@ -158,4 +159,7 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     address: Optional[str] = None
     profession: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
+    date_of_birth: Optional[date] = None
+
+class UserPositionUpdate(BaseModel):
+    position: Optional[str] = None

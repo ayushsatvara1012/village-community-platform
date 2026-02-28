@@ -62,9 +62,9 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                     >
-                        <h2 className='text-3xl mb-5 tracking-wide font-extrabold font-gujarati'>શ્રી સતવારા કડિયા <span className='text-orange-500'>પ્રગતિ મંડળ</span> , અમદાવાદ</h2>
-                        <h1 className="text-4xl leading sm:text-6xl font-gujarati tracking-tight mb-6">
-                            <span className="text-blue-400">{villageCount} </span>ગામોનું અમદાવાદ ગાંધીનગર નિમિત્તે સશક્તિકરણ 
+                        <h2 className='text-3xl mb-5 tracking-wide  font-gujarati'>શ્રી સથવારા કડિયા <span className='text-orange-500'>પ્રગતિ મંડળ</span> , અમદાવાદ</h2>
+                        <h1 className="text-4xl leading sm:text-6xl font-bold font-gujarati tracking-tight mb-6">
+                            <span className="text-blue-400">{villageCount} </span>ગામોનું અમદાવાદ-ગાંધીનગર રહેવાસીઓનું સશક્તિકરણ
                         </h1>
                         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
                             Uniting {memberCount}+ members under one digital roof. Join us in building a stronger, more connected community.
@@ -132,11 +132,11 @@ export default function Home() {
                                 Our Heritage
                             </div>
                             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-6 font-gujarati">
-                                સતવારા સમાજ અને તેનો ભવ્ય ઈતિહાસ
+                                સથવારા સમાજ અને તેનો ભવ્ય ઈતિહાસ
                             </h2>
                             <div className="space-y-4 text-gray-600 dark:text-gray-400 leading-relaxed">
                                 <p className='font-gujarati text-lg'>
-                                    સતવારા સમુદાય, જેને સતવારા કડિયા તરીકે પણ ઓળખવામાં આવે છે, તે ગુજરાતમાં સમૃદ્ધ સાંસ્કૃતિક અને સ્થાપત્ય વારસો ધરાવે છે. પરંપરાગત રીતે પથ્થરકામ અને ચણતરમાં તેમની અસાધારણ કારીગરી માટે જાણીતા, આ સમુદાયે આપણા પ્રદેશમાં કેટલીક સૌથી પ્રતિષ્ઠિત રચનાઓના નિર્માણમાં મુખ્ય ભૂમિકા ભજવી છે.
+                                    સથવારા સમુદાય, જેને સતવારા કડિયા તરીકે પણ ઓળખવામાં આવે છે, તે ગુજરાતમાં સમૃદ્ધ સાંસ્કૃતિક અને સ્થાપત્ય વારસો ધરાવે છે. પરંપરાગત રીતે પથ્થરકામ અને ચણતરમાં તેમની અસાધારણ કારીગરી માટે જાણીતા, આ સમુદાયે આપણા પ્રદેશમાં કેટલીક સૌથી પ્રતિષ્ઠિત રચનાઓના નિર્માણમાં મુખ્ય ભૂમિકા ભજવી છે.
                                 </p>
                                 <p className='font-gujarati text-lg'>
                                     સદીઓથી આપણા પૂર્વજો આ પ્રદેશના વિકાસની કરોડરજ્જુ હતા. આજે, જ્યારે આપણે આપણા પરંપરાગત મૂળનું સન્માન કરીએ છીએ, ત્યારે આપણો સમુદાય વ્યાવસાયિકો, ઉદ્યોગસાહસિકો અને વિદ્વાનોના વિવિધ જૂથમાં વિકસિત થયો છે જેઓ આપણા સાંસ્કૃતિક મૂલ્યો અને એકતા જાળવી રાખીને રાષ્ટ્રના વિકાસમાં યોગદાન આપી રહ્યા છે.
@@ -211,17 +211,17 @@ export default function Home() {
                     <div className="space-y-12 sm:space-y-32">
                         {[
                             {
-                                title: "Samuh Lagan (Group Marriages)",
-                                desc: "Our flagship initiative aims to simplify marriages and reduce financial burdens on families. By organizing mass marriage ceremonies, we celebrate unity and promote the traditional values of community support and simplicity.",
-                                icon: Users,
-                                image: "https://d1zpvjny0s6omk.cloudfront.net/media/fileupload/2015/09/28/PYE_3523.jpg",
-                                color: "blue",
-                                stats: "500+ Couples Blessed",
-                                accent: "border-blue-500/30 bg-blue-500/5"
+                                title: "આર્થિક સહાય (Funeral Support)",
+                                desc: "મંડળમાં જે કોઈ ઉમ્મેદવાર હોય તેમનું અવસાન થાય તો સભ્યોએ તે સભ્યને પરિવારને આર્થિક સહાય પેટે રૂપિયા ૧૦૦/- પ્રતિ સભ્ય આપવાના રહે, જેમાં ૨૦૦ સભ્યો છે તો પ્રતિ વ્યક્તિ રૂપિયા ૧૦૦/- લેખે રૂપિયા ૨૦,૦૦૦/- થાય. જે રકમ અવસાન પામનાર વ્યક્તિના વારસાદર ને ચેક દ્વારા સહાય કરવામાં આવશે. ",
+                                icon: HandHeart,
+                                image: "/funeral-img.webp",
+                                color: "red",
+                                stats: "શ્રી સોશિયલ સથવારા કડિયા સેવા ટ્રસ્ટ, અમદાવાદ",
+                                accent: "border-red-500/30 bg-red-500/5"
                             },
                             {
-                                title: "Yuva Melo (Matrimonial Events)",
-                                desc: "The Yuva Melo serves as a modern bridge for our youth, providing a respectful and organized platform for matrimonial networking. We help our young generation find compatible life partners within our shared heritage.",
+                                title: "યુવા મેળો (Matrimonial Event)",
+                                desc: "યુવા મેળો આપણા યુવાનો માટે એક આધુનિક સેતુ (પુલ) સમાન છે, જે જીવનસાથીની પસંદગી માટે એક આદરણીય અને વ્યવસ્થિત મંચ પૂરો પાડે છે. અમે આપણી નવી પેઢીને આપણા સમાન વારસામાં સુસંગત જીવનસાથી શોધવામાં મદદ કરીએ છીએ.",
                                 icon: Sparkles,
                                 image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2669&auto=format&fit=crop",
                                 color: "orange",
@@ -229,23 +229,23 @@ export default function Home() {
                                 accent: "border-orange-500/30 bg-orange-500/5"
                             },
                             {
-                                title: "Vidhva Sahay (Widow Support)",
-                                desc: "We provide dedicated financial assistance and social security schemes for widowed women in our community. Compassion is at the core of our work, ensuring no member is left behind in their time of need.",
-                                icon: HandHeart,
-                                image: "https://img.freepik.com/premium-vector/mother-child-mom-baby-icon-flat-design-vector-cartoon-illustration-white-isolated-card-poster-banner-postcard-brochure-mother-s-day_610956-1099.jpg",
-                                color: "red",
-                                stats: "Monthly Financial Support",
-                                accent: "border-red-500/30 bg-red-500/5"
+                                title: "સમૂહ લગન (Group Marriages)",
+                                desc: "અમારી મુખ્ય પહેલનો ઉદ્દેશ્ય લગ્નોને સરળ બનાવવાનો અને પરિવારો પરનો આર્થિક બોજ ઘટાડવાનો છે. સમૂહ લગ્નોનું આયોજન કરીને, અમે એકતાની ઉજવણી કરીએ છીએ અને સામુદાયિક ટેકો તથા સાદગી જેવા પરંપરાગત મૂલ્યોને પ્રોત્સાહન આપીએ છીએ.",
+                                icon: Users,
+                                image: "https://d1zpvjny0s6omk.cloudfront.net/media/fileupload/2015/09/28/PYE_3523.jpg",
+                                color: "blue",
+                                stats: "500+ પરિવારોને આશીર્વાદ",
+                                accent: "border-blue-500/30 bg-blue-500/5"
                             },
-                            {
-                                title: "Educational Motivation & Awards",
-                                desc: "Education is the foundation of progress. We recognize and reward our brightest students with prizes and scholarships, encouraging a culture of academic excellence and continuous learning for the next generation.",
-                                icon: Trophy,
-                                image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh9NstGwxc4Wt9DHE5mNDUBuCkBJbRWWDuGcSy4qwcY08d89krGi-MTu-R_pUc9AjS0Fgrs4FvMyle4HyYjgLzxJUplYYXRNUbx19keRzeA2TyGT3RuDLoRH2yDe48Ooimo1JNy2jlk0yVk/s1600/how-to-motivate-students.jpg",
-                                color: "yellow",
-                                stats: "1000+ Students Awarded",
-                                accent: "border-yellow-500/30 bg-yellow-500/5"
-                            }
+                            // {
+                            //     title: "Educational Motivation & Awards",
+                            //     desc: "Education is the foundation of progress. We recognize and reward our brightest students with prizes and scholarships, encouraging a culture of academic excellence and continuous learning for the next generation.",
+                            //     icon: Trophy,
+                            //     image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh9NstGwxc4Wt9DHE5mNDUBuCkBJbRWWDuGcSy4qwcY08d89krGi-MTu-R_pUc9AjS0Fgrs4FvMyle4HyYjgLzxJUplYYXRNUbx19keRzeA2TyGT3RuDLoRH2yDe48Ooimo1JNy2jlk0yVk/s1600/how-to-motivate-students.jpg",
+                            //     color: "yellow",
+                            //     stats: "1000+ Students Awarded",
+                            //     accent: "border-yellow-500/30 bg-yellow-500/5"
+                            // }
                         ].map((item, idx) => (
                             <div key={idx}>
                                 {/* Desktop Version: Alternating Image/Text */}
@@ -266,7 +266,7 @@ export default function Home() {
                                             />
                                             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                             <div className="absolute bottom-6 left-6 text-white transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                                                <span className="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full text-sm font-bold border border-white/30">
+                                                <span className="bg-white/20 backdrop-blur-md px-4 py-1 rounded-full text-lg font-bold border border-white/30">
                                                     {item.stats}
                                                 </span>
                                             </div>
@@ -297,7 +297,7 @@ export default function Home() {
                                     whileInView={{ opacity: 1, scale: 1 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.6 }}
-                                    className="lg:hidden relative overflow-hidden rounded-[2.5rem] shadow-xl border border-white/20 min-h-[450px] flex flex-col justify-end p-8 group"
+                                    className="lg:hidden relative overflow-hidden rounded-[2.5rem] shadow-xl border border-white/20 min-h-[480px] flex flex-col group"
                                 >
                                     {/* Blurred Backdrop Image */}
                                     <div className="absolute inset-0 z-0">
@@ -307,26 +307,31 @@ export default function Home() {
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10"></div>
-                                        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent z-20"></div>
+                                        <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-black/10 z-20"></div>
                                     </div>
 
-                                    {/* Content Overlay */}
-                                    <div className="relative z-30 space-y-4">
-                                        <div className={`w-12 h-12 rounded-xl bg-white/10 backdrop-blur-lg flex items-center justify-center border border-white/20`}>
-                                            <item.icon className={`w-6 h-6 text-white`} />
+                                    {/* Content Overlay — fills full card height */}
+                                    <div className="relative z-30 flex flex-col justify-between flex-1 p-6">
+                                        {/* Top: Icon + Title + Description */}
+                                        <div className="space-y-3">
+                                            <div className={`w-12 h-12 rounded-xl bg-white/10 backdrop-blur-lg flex items-center justify-center border border-white/20`}>
+                                                <item.icon className={`w-6 h-6 text-white`} />
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-white tracking-tight leading-tight">
+                                                {item.title}
+                                            </h3>
+                                            <p className="text-gray-200 text-sm leading-relaxed line-clamp-5">
+                                                {item.desc}
+                                            </p>
                                         </div>
-                                        <h3 className="text-2xl font-bold text-white tracking-tight leading-tight">
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-gray-200 text-sm leading-relaxed line-clamp-4">
-                                            {item.desc}
-                                        </p>
-                                        <div className="flex items-center justify-between pt-4">
-                                            <span className="text-xs font-bold text-white/70 uppercase tracking-widest px-3 py-1 rounded-full border border-white/10 bg-white/5">
+
+                                        {/* Bottom: Stats badge + Button — column on mobile */}
+                                        <div className="flex flex-col gap-3 pt-5">
+                                            <span className="text-xs font-bold text-white/70 uppercase tracking-widest px-3 py-2 rounded-full border border-white/10 bg-white/5 text-center">
                                                 {item.stats}
                                             </span>
-                                            <Button size="sm" className="bg-white text-black hover:bg-gray-100 rounded-full px-6">
-                                                Detail
+                                            <Button size="sm" className="w-full bg-white text-black hover:bg-gray-100 rounded-full">
+                                                Learn More <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
                                             </Button>
                                         </div>
                                     </div>

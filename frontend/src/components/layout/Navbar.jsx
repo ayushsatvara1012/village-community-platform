@@ -61,8 +61,10 @@ export function Navbar() {
                                 alt="Logo"
                                 className="w-10 h-10 object-contain"
                             />
-
-                            <span className="font-bold font-gujarati text-2xl text-gray-900 dark:text-white">સતવારા <span className='text-orange-700'>સમાજ</span></span>
+                            <div className='flex flex-col items-center justify-center'>
+                                <span className=" text-xs tracking-tighter font-gujarati text-gray-900 dark:text-white">શ્રી સથવારા કડિયા</span>
+                                <span className='font-bold text-2xl font-gujarati bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent'>પ્રગતિ મંડળ</span>
+                            </div>
                         </Link>
                     </div>
 

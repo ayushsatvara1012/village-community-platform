@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Users, Plus, Trash2, Loader2, AlertCircle, X,
     ChevronDown, ChevronRight, Mail, Phone, Briefcase, MapPin,
-    RotateCcw, Edit2, Download, Award
+    RotateCcw, Edit2, Download, Award, ShieldCheck
 } from 'lucide-react';
 
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
@@ -150,14 +150,14 @@ export default function Profile() {
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         try {
-            // Handle ISO string or YYYY-MM-DD
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
-            // Use UTC methods to avoid timezone offsets shifting the day back
-            const d = date.getUTCDate().toString().padStart(2, '0');
-            const m = (date.getUTCMonth() + 1).toString().padStart(2, '0');
-            const y = date.getUTCFullYear();
-            return `${d}/${m}/${y}`;
+            // Split YYYY-MM-DD or handle ISO string split by T
+            const cleanDate = dateStr.split('T')[0];
+            const parts = cleanDate.split('-');
+            if (parts.length === 3) {
+                const [y, m, d] = parts;
+                return `${d}/${m}/${y}`;
+            }
+            return dateStr;
         } catch (e) {
             return dateStr;
         }
@@ -336,10 +336,16 @@ export default function Profile() {
                             </div>
 
                             <div className="text-center lg:text-left flex-1 pt-4 self-center lg:self-top">
-                                <div className="flex flex-col lg:flex-row items-center lg:items-baseline gap-3 mb-10">
+                                <div className="flex flex-col lg:flex-row items-center lg:items-center gap-3">
                                     <h1 className="text-3xl sm:text-5xl font-black inline-block bg-gradient-to-r from-yellow-500 to-yellow-200 text-transparent bg-clip-text dark:text-white tracking-tight leading-none">
                                         {user?.full_name}
                                     </h1>
+                                    {user?.position && (
+                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 dark:bg-blue-500 rounded-lg shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform duration-200">
+                                            <ShieldCheck className="w-4 h-4 text-white" />
+                                            <span className="text-xs font-black text-white uppercase tracking-wider">{user.position}</span>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 mt-4 text-sm font-semibold text-gray-500 dark:text-gray-400">
@@ -638,107 +644,116 @@ export default function Profile() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm"
+                        onClick={(e) => { if (e.target === e.currentTarget) setShowEditModal(false); }}
                     >
                         <motion.div
-                            initial={{ scale: 0.9, y: 20 }}
-                            animate={{ scale: 1, y: 0 }}
-                            exit={{ scale: 0.9, y: 20 }}
-                            className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl max-w-lg w-full p-10 relative border border-white/20 dark:border-gray-700/30"
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+                            className="bg-white dark:bg-gray-800 w-full sm:max-w-lg sm:mx-4 rounded-t-4xl sm:rounded-4xl shadow-2xl relative border-t border-gray-100 dark:border-gray-700 sm:border overflow-hidden"
                         >
-                            <button
-                                onClick={() => setShowEditModal(false)}
-                                className="absolute top-8 right-8 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-                            >
-                                <X className="w-6 h-6" />
-                            </button>
-
-                            <div className="mb-10">
-                                <h2 className="text-3xl font-black text-black dark:text-white mb-2">Edit Profile</h2>
-                                <p className="text-sm text-gray-500">Update your personal information</p>
+                            {/* Drag handle indicator (mobile only) */}
+                            <div className="sm:hidden flex justify-center pt-3 pb-1">
+                                <div className="w-10 h-1 rounded-full bg-gray-200 dark:bg-gray-600" />
                             </div>
 
-                            {error && (
-                                <div className="mb-6 p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400 text-sm flex items-center gap-3">
-                                    <AlertCircle className="w-5 h-5 shrink-0" />
-                                    {error}
-                                </div>
-                            )}
+                            <div className="overflow-y-auto max-h-[85vh] sm:max-h-[90vh] p-5 sm:p-8">
+                                <button
+                                    onClick={() => setShowEditModal(false)}
+                                    className="absolute top-4 right-4 sm:top-6 sm:right-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
 
-                            <form onSubmit={handleUpdateProfile} className="space-y-6">
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Full Name</label>
-                                    <input
-                                        type="text" required
-                                        value={editProfileData.full_name}
-                                        onChange={(e) => setEditProfileData({ ...editProfileData, full_name: e.target.value })}
-                                        className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
-                                    />
+                                <div className="mb-5 sm:mb-7">
+                                    <h2 className="text-xl sm:text-3xl font-black text-black dark:text-white mb-1">Edit Profile</h2>
+                                    <p className="text-xs sm:text-sm text-gray-500">Update your personal information</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Phone Number</label>
+                                {error && (
+                                    <div className="mb-4 p-3 sm:p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-700 dark:text-red-400 text-sm flex items-center gap-3">
+                                        <AlertCircle className="w-4 h-4 shrink-0" />
+                                        {error}
+                                    </div>
+                                )}
+
+                                <form onSubmit={handleUpdateProfile} className="space-y-4 sm:space-y-5">
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Full Name</label>
                                         <input
-                                            type="text"
-                                            value={editProfileData.phone_number}
-                                            onChange={(e) => setEditProfileData({ ...editProfileData, phone_number: e.target.value })}
-                                            className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                            type="text" required
+                                            value={editProfileData.full_name}
+                                            onChange={(e) => setEditProfileData({ ...editProfileData, full_name: e.target.value })}
+                                            className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
                                         />
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
-                                        <input
-                                            type="text"
-                                            value={editProfileData.profession}
-                                            onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
-                                            className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Birth Date</label>
-                                        <div className="relative">
+
+                                    <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                                        <div className="space-y-1.5">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Phone</label>
                                             <input
-                                                type="date"
-                                                value={editProfileData.date_of_birth}
-                                                onChange={(e) => setEditProfileData({ ...editProfileData, date_of_birth: e.target.value })}
-                                                className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-transparent dark:text-transparent selection:bg-transparent font-bold"
+                                                type="text"
+                                                value={editProfileData.phone_number}
+                                                onChange={(e) => setEditProfileData({ ...editProfileData, phone_number: e.target.value })}
+                                                className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
                                             />
-                                            <div className="absolute inset-0 flex items-center px-5 pointer-events-none text-black dark:text-white font-bold">
-                                                {editProfileData.date_of_birth ? formatDate(editProfileData.date_of_birth) : <span className="text-gray-400">DD/MM/YYYY</span>}
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
+                                            <input
+                                                type="text"
+                                                value={editProfileData.profession}
+                                                onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
+                                                className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                            />
+                                        </div>
+                                        <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Birth Date</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="date"
+                                                    value={editProfileData.date_of_birth}
+                                                    onChange={(e) => setEditProfileData({ ...editProfileData, date_of_birth: e.target.value })}
+                                                    className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-transparent dark:text-transparent selection:bg-transparent font-bold"
+                                                />
+                                                <div className="absolute inset-0 flex items-center px-4 sm:px-5 pointer-events-none text-black dark:text-white font-bold text-sm">
+                                                    {editProfileData.date_of_birth ? formatDate(editProfileData.date_of_birth) : <span className="text-gray-400">DD/MM/YYYY</span>}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-2">
-                                    <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
-                                    <textarea
-                                        rows="3"
-                                        value={editProfileData.address}
-                                        onChange={(e) => setEditProfileData({ ...editProfileData, address: e.target.value })}
-                                        className="w-full px-5 py-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold resize-none"
-                                    />
-                                </div>
+                                    <div className="space-y-1.5">
+                                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Address</label>
+                                        <textarea
+                                            rows="2"
+                                            value={editProfileData.address}
+                                            onChange={(e) => setEditProfileData({ ...editProfileData, address: e.target.value })}
+                                            className="w-full px-4 py-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold resize-none"
+                                        />
+                                    </div>
 
-                                <div className="flex gap-4 pt-4">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setShowEditModal(false)}
-                                        className="flex-1 py-4 rounded-2xl font-bold h-14"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        type="submit"
-                                        disabled={isSubmitting}
-                                        className="flex-1 py-4 bg-black hover:bg-gray-900 text-white rounded-2xl font-black h-14 shadow-xl shadow-black/10"
-                                    >
-                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save Changes'}
-                                    </Button>
-                                </div>
-                            </form>
+                                    <div className="flex gap-3 pt-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setShowEditModal(false)}
+                                            className="flex-1 py-3 rounded-xl sm:rounded-2xl font-bold h-12"
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="flex-1 py-3 bg-black hover:bg-gray-900 text-white rounded-xl sm:rounded-2xl font-black h-12 shadow-lg shadow-black/10"
+                                        >
+                                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save Changes'}
+                                        </Button>
+                                    </div>
+                                </form>
+                            </div>
                         </motion.div>
                     </motion.div>
                 )}

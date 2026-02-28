@@ -83,9 +83,13 @@ export default function Application() {
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         try {
-            const [year, month, day] = dateStr.split('-');
-            if (!year || !month || !day) return dateStr;
-            return `${day}/${month}/${year}`;
+            const cleanDate = dateStr.split('T')[0];
+            const parts = cleanDate.split('-');
+            if (parts.length === 3) {
+                const [y, m, d] = parts;
+                return `${d}/${m}/${y}`;
+            }
+            return dateStr;
         } catch (e) {
             return dateStr;
         }
