@@ -62,9 +62,9 @@ export default function Home() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.8 }}
                     >
-                        <h2 className='text-3xl font-gujarati'>શ્રી દંઢાવ્ય પરગણા સતવારા કડિયા કેળવણી ઉત્તેજક મંડળ</h2>
-                        <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6">
-                            <span className="text-blue-400">{villageCount} </span>ગામોનું સશક્તિકરણ
+                        <h2 className='text-3xl mb-5 tracking-wide font-extrabold font-gujarati'>શ્રી સતવારા કડિયા <span className='text-orange-500'>પ્રગતિ મંડળ</span> , અમદાવાદ</h2>
+                        <h1 className="text-4xl leading sm:text-6xl font-gujarati tracking-tight mb-6">
+                            <span className="text-blue-400">{villageCount} </span>ગામોનું અમદાવાદ ગાંધીનગર નિમિત્તે સશક્તિકરણ 
                         </h1>
                         <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto mb-10">
                             Uniting {memberCount}+ members under one digital roof. Join us in building a stronger, more connected community.
@@ -232,7 +232,7 @@ export default function Home() {
                                 title: "Vidhva Sahay (Widow Support)",
                                 desc: "We provide dedicated financial assistance and social security schemes for widowed women in our community. Compassion is at the core of our work, ensuring no member is left behind in their time of need.",
                                 icon: HandHeart,
-                                image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=2670&auto=format&fit=crop",
+                                image: "https://img.freepik.com/premium-vector/mother-child-mom-baby-icon-flat-design-vector-cartoon-illustration-white-isolated-card-poster-banner-postcard-brochure-mother-s-day_610956-1099.jpg",
                                 color: "red",
                                 stats: "Monthly Financial Support",
                                 accent: "border-red-500/30 bg-red-500/5"
@@ -241,7 +241,7 @@ export default function Home() {
                                 title: "Educational Motivation & Awards",
                                 desc: "Education is the foundation of progress. We recognize and reward our brightest students with prizes and scholarships, encouraging a culture of academic excellence and continuous learning for the next generation.",
                                 icon: Trophy,
-                                image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2670&auto=format&fit=crop",
+                                image: "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh9NstGwxc4Wt9DHE5mNDUBuCkBJbRWWDuGcSy4qwcY08d89krGi-MTu-R_pUc9AjS0Fgrs4FvMyle4HyYjgLzxJUplYYXRNUbx19keRzeA2TyGT3RuDLoRH2yDe48Ooimo1JNy2jlk0yVk/s1600/how-to-motivate-students.jpg",
                                 color: "yellow",
                                 stats: "1000+ Students Awarded",
                                 accent: "border-yellow-500/30 bg-yellow-500/5"
@@ -337,28 +337,7 @@ export default function Home() {
                 </div>
             </section>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Leadership Card */}
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden col-span-1 lg:col-span-1 border border-gray-100 dark:border-gray-700"
-                >
-                    <div className="h-32 bg-blue-600"></div>
-                    <div className="px-6 pb-6 -mt-16 flex flex-col items-center text-center">
-                        <img
-                            src="https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop"
-                            alt="Minister"
-                            className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 object-cover shadow-md"
-                        />
-                        <h3 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Hon. Minister Sharma</h3>
-                        <p className="text-blue-600 font-medium">Community Leader</p>
-                        <p className="mt-4 text-gray-600 dark:text-gray-300 text-sm italic">
-                            "Together we build the foundation of a prosperous future. Every member counts, every village matters."
-                        </p>
-                    </div>
-                </motion.div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                 {/* Bento Grid Features */}
                 <div className="col-span-1 lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -384,11 +363,11 @@ export default function Home() {
                         <a href="#" className="mt-4 text-green-600 font-medium flex items-center hover:underline">Check Calendar <ArrowRight className="w-4 h-4 ml-1" /></a>
                     </div>
 
-                    <div className="bg-indigo-600 p-6 rounded-2xl shadow-lg md:col-span-2 text-white flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
+                    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg md:col-span-2 border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-6 relative overflow-hidden">
                         <div className="relative z-10">
                             <h3 className="text-2xl font-bold mb-2">Support Your Community</h3>
-                            <p className="text-indigo-100 mb-4 max-w-md">Your contributions help us maintain facilities, organize events, and support those in need.</p>
-                            <Button variant="secondary" className="bg-white text-indigo-600 hover:bg-indigo-50">Donate Now</Button>
+                            <p className="text-gray-600 dark:text-gray-400 mb-4 max-w-md">Your contributions help us maintain facilities, organize events, and support those in need.</p>
+                            <Button variant="secondary" className="bg-white dark:bg-gray-800 border dark:border-orange-800 text-orange-600 hover:bg-red-200">Donate Now</Button>
                         </div>
                         <div className="absolute right-0 top-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div>
                     </div>

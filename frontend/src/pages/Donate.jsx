@@ -19,6 +19,7 @@ export default function Donate() {
     const [isCreatingEvent, setIsCreatingEvent] = useState(false);
     const [newEventData, setNewEventData] = useState({ title: '', description: '', goal: '', category: 'General' });
     const [newEventImage, setNewEventImage] = useState(null);
+    const [editingEvent, setEditingEvent] = useState(null);
 
     const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
@@ -256,6 +257,110 @@ export default function Donate() {
         }
     };
 
+    const handleDeleteEvent = async (eventId) => {
+        if (!window.confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
+
+        const token = localStorage.getItem('village_app_token');
+        try {
+            const res = await fetch(`${API_URL}/events/${eventId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.detail || 'Failed to delete event');
+            }
+
+            fetchEvents();
+        } catch (err) {
+            console.error('Delete event failed:', err);
+            alert(err.message || 'Failed to delete event');
+        }
+    };
+
+    const handleEditEvent = (event) => {
+        setEditingEvent(event);
+        setNewEventData({
+            title: event.title,
+            description: event.description,
+            goal: String(event.goal),
+            category: event.category
+        });
+        setShowAddEvent(true);
+    };
+
+    const handleUpdateEvent = async () => {
+        if (!newEventData.title || !newEventData.description || !newEventData.goal) {
+            setError('Please fill all required fields.');
+            return;
+        }
+
+        setIsCreatingEvent(true);
+        setError('');
+        const token = localStorage.getItem('village_app_token');
+
+        try {
+            let imageUrl = editingEvent.image;
+
+            // 1. Upload new image if selected
+            if (newEventImage) {
+                const formData = new FormData();
+                formData.append('file', newEventImage);
+
+                const uploadRes = await fetch(`${API_URL}/events/upload-image`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!uploadRes.ok) {
+                    const errData = await uploadRes.json();
+                    throw new Error(errData.detail || 'Image upload failed');
+                }
+
+                const { url } = await uploadRes.json();
+                imageUrl = url;
+            }
+
+            // 2. Update Event Record
+            const eventPayload = {
+                title: newEventData.title,
+                description: newEventData.description,
+                goal: parseFloat(newEventData.goal),
+                category: newEventData.category,
+                image: imageUrl
+            };
+
+            const updateRes = await fetch(`${API_URL}/events/${editingEvent.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(eventPayload)
+            });
+
+            if (!updateRes.ok) {
+                const errData = await updateRes.json();
+                throw new Error(errData.detail || 'Failed to update event');
+            }
+
+            // Success
+            setShowAddEvent(false);
+            setEditingEvent(null);
+            setNewEventData({ title: '', description: '', goal: '', category: 'General' });
+            setNewEventImage(null);
+            fetchEvents();
+
+        } catch (err) {
+            console.error('Event update failed:', err);
+            setError(err.message || 'Failed to update event. Please try again.');
+        } finally {
+            setIsCreatingEvent(false);
+        }
+    };
+
     // Is any modal open?
     const isModalOpen = selectedEvent || showGeneralDonate;
     const modalTitle = selectedEvent ? `Donate to ${selectedEvent.title}` : 'General Donation';
@@ -350,8 +455,28 @@ export default function Donate() {
                                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/80 to-gray-900/40 backdrop-blur-[2px]"></div>
                                 </div>
 
-                                <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white border border-white/20 shadow-sm">
-                                    {event.category}
+                                <div className="absolute top-4 right-4 flex items-center gap-2">
+                                    <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white border border-white/20 shadow-sm">
+                                        {event.category}
+                                    </div>
+                                    {user?.role === 'admin' && (
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleEditEvent(event)}
+                                                className="p-1.5 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white border border-white/20 transition-all"
+                                                title="Edit Event"
+                                            >
+                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v24a2 2 0 0 0 2 2h24a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteEvent(event.id)}
+                                                className="p-1.5 bg-red-500/80 hover:bg-red-600 backdrop-blur-md rounded-full text-white border border-white/20 transition-all"
+                                                title="Delete Event"
+                                            >
+                                                <X className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="relative z-10 p-8 flex-1 flex flex-col justify-end mt-32">
@@ -524,13 +649,15 @@ export default function Donate() {
                             className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full p-6 md:p-8 relative max-h-[90vh] overflow-y-auto"
                         >
                             <button
-                                onClick={() => { setShowAddEvent(false); setNewEventImage(null); }}
+                                onClick={() => { setShowAddEvent(false); setNewEventImage(null); setEditingEvent(null); }}
                                 className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
                             >
                                 <X className="w-6 h-6" />
                             </button>
 
-                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create Campaign Event</h2>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                                {editingEvent ? 'Edit Campaign Event' : 'Create Campaign Event'}
+                            </h2>
 
                             {error && (
                                 <div className="mb-6 p-3 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-sm flex items-center gap-2">
@@ -617,10 +744,14 @@ export default function Donate() {
 
                                 <Button
                                     className="w-full py-3 mt-4"
-                                    onClick={handleCreateEvent}
+                                    onClick={editingEvent ? handleUpdateEvent : handleCreateEvent}
                                     disabled={isCreatingEvent}
                                 >
-                                    {isCreatingEvent ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Publishing Event...</> : 'Launch Campaign'}
+                                    {isCreatingEvent ? (
+                                        <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> {editingEvent ? 'Updating...' : 'Publishing...'}</>
+                                    ) : (
+                                        editingEvent ? 'Save Changes' : 'Launch Campaign'
+                                    )}
                                 </Button>
                             </div>
                         </motion.div>

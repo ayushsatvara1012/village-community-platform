@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     User, Users, Plus, Trash2, Loader2, AlertCircle, X,
     ChevronDown, ChevronRight, Mail, Phone, Briefcase, MapPin,
-    RotateCcw, Edit2
+    RotateCcw, Edit2, Download, Award
 } from 'lucide-react';
 
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
@@ -153,9 +153,10 @@ export default function Profile() {
             // Handle ISO string or YYYY-MM-DD
             const date = new Date(dateStr);
             if (isNaN(date.getTime())) return dateStr;
-            const d = date.getDate().toString().padStart(2, '0');
-            const m = (date.getMonth() + 1).toString().padStart(2, '0');
-            const y = date.getFullYear();
+            // Use UTC methods to avoid timezone offsets shifting the day back
+            const d = date.getUTCDate().toString().padStart(2, '0');
+            const m = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+            const y = date.getUTCFullYear();
             return `${d}/${m}/${y}`;
         } catch (e) {
             return dateStr;
@@ -298,13 +299,26 @@ export default function Profile() {
             <div className="max-w-7xl mx-auto">
                 {/* Profile Header */}
                 <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl overflow-hidden mb-12 border border-white dark:border-gray-700/50 relative">
+
                     {/* Background Image Container */}
                     <div className="h-48 sm:h-64 bg-[url('/vishwakarma_profile.webp')] bg-cover bg-top relative overflow-hidden">
+
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent"></div>
+                        <div className="absolute left-10 top-5 flex items-center gap-3 z-10">
+                            <div className='px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em]'>
+                                {user?.status}
+                            </div>
+                            <button
+                                onClick={() => setShowEditModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1 bg-white/20 hover:bg-white/20 text-green-600 dark:text-green-400 border border-white/20 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md transition-all active:scale-95 group shadow-lg"
+                            >
+                                <Edit2 className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+                            </button>
+                        </div>
                     </div>
 
                     <div className="relative px-6 sm:px-10 lg:px-12 pb-10">
-                        <div className="-mt-20 sm:-mt-24 flex flex-col lg:flex-row items-center lg:items-end gap-6 lg:gap-10">
+                        <div className="-mt-20 sm:-mt-24 flex flex-col lg:flex-row items-center lg:items-start gap-6 lg:gap-10">
                             <div className="relative group">
                                 <motion.div
                                     whileHover={{ scale: 1.02 }}
@@ -321,14 +335,11 @@ export default function Profile() {
                                 <span className={`absolute bottom-3 right-3 w-7 h-7 rounded-full border-4 border-white dark:border-gray-800 shadow-sm z-20 ${user?.status === 'member' ? 'bg-green-500' : 'bg-amber-500'}`}></span>
                             </div>
 
-                            <div className="text-center lg:text-left flex-1 pt-4 self-center lg:self-end">
-                                <div className="flex flex-col lg:flex-row items-center lg:items-baseline gap-3 mb-2">
-                                    <h1 className="text-4xl sm:text-5xl font-black text-black dark:text-white tracking-tight leading-none">
+                            <div className="text-center lg:text-left flex-1 pt-4 self-center lg:self-top">
+                                <div className="flex flex-col lg:flex-row items-center lg:items-baseline gap-3 mb-10">
+                                    <h1 className="text-3xl sm:text-5xl font-black inline-block bg-gradient-to-r from-yellow-500 to-yellow-200 text-transparent bg-clip-text dark:text-white tracking-tight leading-none">
                                         {user?.full_name}
                                     </h1>
-                                    <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                                        {user?.status}
-                                    </span>
                                 </div>
 
                                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 mt-4 text-sm font-semibold text-gray-500 dark:text-gray-400">
@@ -361,17 +372,6 @@ export default function Profile() {
                                         </span>
                                     )}
                                 </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 pb-2 pt-4 lg:pt-0">
-                                <Button
-                                    onClick={() => setShowEditModal(true)}
-                                    variant="outline"
-                                    className="rounded-2xl border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 h-14 px-8 font-bold shadow-sm shrink-0"
-                                >
-                                    <Edit2 className="w-4 h-4 mr-2" />
-                                    Edit Profile
-                                </Button>
                             </div>
                         </div>
                     </div>

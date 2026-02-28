@@ -84,7 +84,15 @@ class DonationEventBase(BaseModel):
     image: str
     category: str
 
+class DonationEventUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    goal: Optional[float] = None
+    image: Optional[str] = None
+    category: Optional[str] = None
+
 class DonationEventCreate(DonationEventBase):
+
     pass
 
 class DonationEvent(DonationEventBase):

@@ -19,6 +19,7 @@ import Villages from './pages/Villages';
 import History from './pages/History';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
+import ScrollToTop from './components/layout/ScrollToTop';
 
 function App() {
     useEffect(() => {
@@ -43,6 +44,7 @@ function App() {
 
     return (
         <AuthProvider>
+            <ScrollToTop />
             <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans">
                 <Navbar />
                 <main className="flex-1 flex flex-col">

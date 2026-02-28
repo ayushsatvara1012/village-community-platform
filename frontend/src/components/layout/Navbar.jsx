@@ -62,7 +62,7 @@ export function Navbar() {
                                 className="w-10 h-10 object-contain"
                             />
 
-                            <span className="font-bold font-gujarati text-2xl text-gray-900 dark:text-white">સતવારા <span className='text-orange-800'>૩૨</span> સમાજ</span>
+                            <span className="font-bold font-gujarati text-2xl text-gray-900 dark:text-white">સતવારા <span className='text-orange-700'>સમાજ</span></span>
                         </Link>
                     </div>
 
@@ -113,7 +113,7 @@ export function Navbar() {
                                     {(user?.status === 'approved' || user?.status === 'member' || user?.role === 'admin') && (
                                         <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                                             <img src={getAvatarUrl()} alt={getUserDisplayName()} className="w-8 h-8 rounded-full bg-gray-200" />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">{getUserDisplayName()}</span>
+                                            {/* <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">{getUserDisplayName()}</span> */}
                                         </Link>
                                     )}
                                 </div>

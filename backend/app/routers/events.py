@@ -67,6 +67,45 @@ def create_event(
     db.refresh(db_event)
     return db_event
 
+@router.patch("/{event_id}", response_model=schemas.DonationEvent)
+def update_event(
+    event_id: int,
+    event_update: schemas.DonationEventUpdate,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+    db: Session = Depends(database.get_db)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db_event = db.query(models.DonationEvent).filter(models.DonationEvent.id == event_id).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    update_data = event_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(db_event, key, value)
+    
+    db.commit()
+    db.refresh(db_event)
+    return db_event
+
+@router.delete("/{event_id}")
+def delete_event(
+    event_id: int,
+    current_user: Annotated[models.User, Depends(get_current_user)],
+    db: Session = Depends(database.get_db)
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    db_event = db.query(models.DonationEvent).filter(models.DonationEvent.id == event_id).first()
+    if not db_event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    db.delete(db_event)
+    db.commit()
+    return {"message": "Event deleted successfully"}
+
 class DonateRequest(BaseModel):
     amount: float
 
