@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { dicebearUrl, getAvatarOptions, initialsUrl } from '../utils/avatar';
 
 const AuthContext = createContext();
 
@@ -40,6 +41,27 @@ export function AuthProvider({ children }) {
         }
     };
 
+    // Build a profile image URL, prioritizing uploaded personal photo then DiceBear
+    const buildAvatarUrl = (profileImage, avatarStyle, fullName) => {
+        if (profileImage) {
+            // If it's a relative path, prepend API_URL
+            return profileImage.startsWith('http') ? profileImage : `${API_URL}${profileImage}`;
+        }
+        if (avatarStyle) {
+            // avatarStyle is now the toon-head seed (e.g., "Abby")
+            return dicebearUrl(avatarStyle, getAvatarOptions(avatarStyle));
+        }
+        // Fallback for new users or missing style — use initials
+        return initialsUrl(fullName || 'User');
+    };
+
+    // Does NOT navigate to /login so public pages (Home, History, etc.) remain visible.
+    const clearAuth = () => {
+        setUser(null);
+        localStorage.removeItem('village_app_token');
+        localStorage.removeItem('village_app_user');
+    };
+
     const checkUserLoggedIn = async () => {
         const token = localStorage.getItem('village_app_token');
         if (token) {
@@ -52,18 +74,22 @@ export function AuthProvider({ children }) {
                 if (response.ok) {
                     const userData = await response.json();
                     userData.name = userData.full_name;
-                    userData.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.full_name)}&background=random`;
+                    userData.avatar = buildAvatarUrl(userData.profile_image, userData.avatar_style, userData.full_name);
                     setUser(userData);
                 } else {
-                    logout();
+                    // Token rejected by server — clear it silently, don't redirect.
+                    // ProtectedRoute will redirect specific protected pages to /login.
+                    clearAuth();
                 }
             } catch (error) {
                 console.error("Auth check failed", error);
-                logout();
+                // Network error — clear token silently, let the user stay on the current page.
+                clearAuth();
             }
         }
         setLoading(false);
     };
+
 
     const login = async (username, password, rememberMe = false) => {
         const formData = new URLSearchParams();
@@ -374,6 +400,7 @@ export function AuthProvider({ children }) {
 
     const value = {
         user,
+        loading,
         login,
         requestUserOtp,
         verifyUserOtp,
@@ -392,7 +419,10 @@ export function AuthProvider({ children }) {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {/* Children render immediately regardless of auth state.
+                ProtectedRoute handles gating for protected pages.
+                Public pages (Home, History, etc.) are unblocked. */}
+            {children}
         </AuthContext.Provider>
     );
 }

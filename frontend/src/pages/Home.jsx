@@ -4,52 +4,37 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../components/ui/Button';
 import { Calendar, Megaphone, ArrowRight, BookOpen, Heart, Users, Trophy, HandHeart, Sparkles } from 'lucide-react';
-import { FullScreenLoader } from '../components/ui/FullScreenLoader';
 import { Footer } from '../components/layout/Footer';
 import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
-    const [villageCount, setVillageCount] = useState(null);
-    const [memberCount, setMemberCount] = useState(null);
-    const [imagesLoaded, setImagesLoaded] = useState(false);
+    // Optimistic initial values — hero renders immediately with placeholders.
+    // Real counts fill in when API responds (no blocking gate).
+    const [villageCount, setVillageCount] = useState('...');
+    const [memberCount, setMemberCount] = useState('...');
 
     useEffect(() => {
-        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
+        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://127.0.0.1:8000'
+            : 'https://village-community-platform.onrender.com');
+
+        fetch(`${API_BASE}/villages/`)
             .then(res => res.json())
             .then(data => setVillageCount(data.length))
             .catch(err => console.error("Failed to fetch village count:", err));
 
-        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/')
+        fetch(`${API_BASE}/members/`)
             .then(res => res.json())
             .then(data => setMemberCount(data.length))
             .catch(err => console.error("Failed to fetch member count:", err));
-
-        // Wait for large header images to load to prevent visual pop-in
-        const imgUrls = [
-            'https://images.unsplash.com/photo-1497250681960-ef046c08a56e?q=80&w=2574&auto=format&fit=crop',
-            'https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=2574&auto=format&fit=crop'
-        ];
-
-        let loadedCount = 0;
-        const checkImages = () => {
-            loadedCount++;
-            if (loadedCount >= imgUrls.length) setImagesLoaded(true);
-        };
-
-        imgUrls.forEach(url => {
-            const img = new window.Image();
-            img.onload = checkImages;
-            img.onerror = checkImages;
-            img.src = url;
-        });
+        // No image preloading — CSS background images don't block rendering.
+        // The /bg-sat.webp LCP preload hint is now in index.html <head>.
     }, []);
 
-    // Show full screen loader if primary counts haven't loaded or images are pulling
-    if (villageCount === null || memberCount === null || !imagesLoaded) {
-        return <FullScreenLoader />;
-    }
+    // Hero renders immediately — no blocking FullScreenLoader gate.
+
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -160,6 +145,10 @@ export default function Home() {
                                 <img
                                     src="/Gujarat_Road_Network_Map_India.jpg"
                                     alt="Community Heritage"
+                                    width={800}
+                                    height={800}
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -262,6 +251,10 @@ export default function Home() {
                                             <img
                                                 src={item.image}
                                                 alt={item.title}
+                                                width={800}
+                                                height={600}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                             />
                                             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -304,6 +297,10 @@ export default function Home() {
                                         <img
                                             src={item.image}
                                             alt=""
+                                            width={800}
+                                            height={600}
+                                            loading="lazy"
+                                            decoding="async"
                                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                         />
                                         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-10"></div>

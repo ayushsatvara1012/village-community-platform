@@ -112,15 +112,23 @@ const History = () => {
     ];
 
     useEffect(() => {
-        // Scroll Progress Listener
+        // rAF-throttled scroll listener — prevents React setState on every scroll tick
+        // passive:true lets the browser scroll without waiting for JS to finish
+        let ticking = false;
         const handleScroll = () => {
-            const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
-            const currentProgress = (window.scrollY / totalScroll) * 100;
-            setScrollProgress(currentProgress);
-            setShowBackToTop(window.scrollY > 300);
+            if (!ticking) {
+                requestAnimationFrame(() => {
+                    const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+                    const currentProgress = (window.scrollY / totalScroll) * 100;
+                    setScrollProgress(currentProgress);
+                    setShowBackToTop(window.scrollY > 300);
+                    ticking = false;
+                });
+                ticking = true;
+            }
         };
 
-        window.addEventListener('scroll', handleScroll);
+        window.addEventListener('scroll', handleScroll, { passive: true });
 
         // Intersection Observer for Scroll Animations
         const observer = new IntersectionObserver(
@@ -171,9 +179,9 @@ const History = () => {
                 style={{ width: `${scrollProgress}%` }}
             />
 
-            {/* Hero Section */}
+            {/* Hero Section — bg-fixed removed to re-enable GPU compositing */}
             <section
-                className="relative h-[50vh] flex items-center justify-center bg-fixed bg-center bg-cover"
+                className="relative h-[50vh] flex items-center justify-center bg-center bg-cover"
                 style={{ backgroundImage: 'url("/bg-sat.webp")' }}
             >
                 <div className="absolute inset-0 bg-black/60 backdrop-blur-xs" />
@@ -225,6 +233,8 @@ const History = () => {
                                         alt={chap.title}
                                         width={800}
                                         height={500}
+                                        loading="lazy"
+                                        decoding="async"
                                         className="rounded-2xl shadow-2xl object-cover w-full h-100 lg:h-[650px] transition-transform duration-500 hover:scale-[1.03]"
                                     />
                                     <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-black/10" />

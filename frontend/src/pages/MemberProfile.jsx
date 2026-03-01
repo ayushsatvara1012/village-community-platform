@@ -7,6 +7,7 @@ import {
     Users, User, Loader2, Mail, Phone, Briefcase, MapPin, ChevronDown, ChevronRight, ArrowLeft, X,
     RotateCcw, Plus, Trash2, ShieldCheck
 } from 'lucide-react';
+import { dicebearUrl, getAvatarOptions, initialsUrl } from '../utils/avatar';
 
 const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
@@ -152,7 +153,15 @@ export default function MemberProfile() {
             if (!memberRes.ok) throw new Error('Failed to load member profile');
 
             const memberData = await memberRes.json();
-            memberData.photo = `https://api.dicebear.com/7.x/avataaars/svg?seed=${memberData.id}`;
+
+            // Priority: profile_image > avatar_style > default
+            if (memberData.profile_image) {
+                memberData.photo = `${API_URL}${memberData.profile_image}`;
+            } else if (memberData.avatar_style) {
+                memberData.photo = dicebearUrl(memberData.avatar_style, getAvatarOptions(memberData.avatar_style));
+            } else {
+                memberData.photo = initialsUrl(memberData.full_name || memberData.id.toString());
+            }
 
             setMember(memberData);
 

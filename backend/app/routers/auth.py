@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -11,6 +11,7 @@ from ..email_utils import send_otp_email
 import os
 import random
 import time
+import shutil
 
 router = APIRouter(
     prefix="/auth",
@@ -93,6 +94,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     db.refresh(new_user)
     return new_user
 
+
+
 @router.post("/token", response_model=schemas.Token)
 def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -147,6 +150,32 @@ async def update_user_me(
     
     db.commit()
     db.refresh(current_user)
+    return current_user
+
+@router.post("/upload-profile-image", response_model=schemas.UserResponse)
+async def upload_profile_image(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    # Validate file type
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image.")
+
+    # Create unique filename
+    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
+    filename = f"user_{current_user.id}_{int(time.time())}.{ext}"
+    file_path = f"static/profile_images/{filename}"
+
+    # Save file
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # Update user profile
+    current_user.profile_image = f"/static/profile_images/{filename}"
+    db.commit()
+    db.refresh(current_user)
+
     return current_user
 
 

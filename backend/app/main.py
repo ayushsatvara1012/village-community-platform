@@ -68,5 +68,5 @@ app.include_router(events.router)
 app.include_router(family.router)
 
 import os
-os.makedirs("static", exist_ok=True)
+os.makedirs("static/profile_images", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")

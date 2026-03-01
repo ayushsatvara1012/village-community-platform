@@ -40,6 +40,8 @@ class UserResponse(UserBase):
     admin_comment: Optional[str] = None
     sabhasad_id: Optional[str] = None
     position: Optional[str] = None
+    avatar_style: Optional[str] = None  # DiceBear style:seed string
+    profile_image: Optional[str] = None # Path/URL to personal photo
     created_at: datetime
     village: Optional[Village] = None
     
@@ -160,6 +162,8 @@ class UserUpdate(BaseModel):
     address: Optional[str] = None
     profession: Optional[str] = None
     date_of_birth: Optional[date] = None
+    avatar_style: Optional[str] = None  # DiceBear style:seed string
+    profile_image: Optional[str] = None # Path/URL to personal photo
 
 class UserPositionUpdate(BaseModel):
     position: Optional[str] = None

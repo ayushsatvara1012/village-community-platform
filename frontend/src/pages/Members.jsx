@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Search, MapPin, ChevronDown, ChevronUp, Briefcase, Edit2, Check, X, Loader2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { dicebearUrl, getAvatarOptions } from '../utils/avatar';
 
 export default function Members() {
     const [selectedVillage, setSelectedVillage] = useState(null);
@@ -34,13 +35,25 @@ export default function Members() {
                 const membersData = await membersRes.json();
                 const villagesData = await villagesRes.json();
 
-                // Enhance members data with UI avatar if photo is missing
-                const enhancedMembers = membersData.map(member => ({
-                    ...member,
-                    name: member.full_name, // Map full_name to name
-                    photo: `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random`,
-                    profession: member.profession || 'Member' // Fallback
-                }));
+                const enhancedMembers = membersData.map(member => {
+                    let photoUrl;
+                    const BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
+
+                    if (member.profile_image) {
+                        photoUrl = `${BASE_URL}${member.profile_image}`;
+                    } else if (member.avatar_style) {
+                        photoUrl = dicebearUrl(member.avatar_style, getAvatarOptions(member.avatar_style));
+                    } else {
+                        photoUrl = dicebearUrl(member.full_name || 'Member');
+                    }
+
+                    return {
+                        ...member,
+                        name: member.full_name, // Map full_name to name
+                        photo: photoUrl,
+                        profession: member.profession || 'Member' // Fallback
+                    };
+                });
 
                 // Calculate member counts for villages locally for now
                 const villageCounts = {};
@@ -244,7 +257,7 @@ export default function Members() {
                                             <img
                                                 src={member.photo}
                                                 alt={member.name}
-                                                className="w-14 h-14 rounded-full border-2 border-white dark:border-gray-700 object-cover bg-gray-200 shadow-md shrink-0"
+                                                className="w-14 h-14 rounded-full border-2 border-white dark:border-gray-700 object-cover object-top bg-gray-200 shadow-md shrink-0"
                                             />
                                             <div className="flex-1 min-w-0">
                                                 <h3 className="font-bold text-base text-gray-900 dark:text-white truncate">{member.name}</h3>
@@ -272,7 +285,7 @@ export default function Members() {
                                                 <img
                                                     src={member.photo}
                                                     alt={member.name}
-                                                    className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 object-cover bg-gray-200 shadow-md"
+                                                    className="w-24 h-24 mx-auto rounded-2xl border-4 border-white dark:border-gray-700 object-cover object-top bg-gray-200 shadow-lg group-hover/card:scale-105 transition-transform duration-500"
                                                 />
                                                 <div className="mt-3 flex flex-col items-center gap-1 w-full text-center">
                                                     <h3 className="font-bold text-lg text-gray-900 dark:text-white truncate w-full">{member.name}</h3>

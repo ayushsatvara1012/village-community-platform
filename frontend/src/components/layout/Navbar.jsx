@@ -3,6 +3,7 @@ import { Button } from '../ui/Button';
 import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard, MapPin, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { initialsUrl } from '../../utils/avatar';
 
 export function Navbar() {
     const { user, logout, isAuthenticated } = useAuth();
@@ -45,8 +46,7 @@ export function Navbar() {
     };
 
     const getAvatarUrl = () => {
-        const name = getUserDisplayName();
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=40`;
+        return user?.avatar || initialsUrl(getUserDisplayName());
     };
 
     return (
@@ -54,7 +54,7 @@ export function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
-                        <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+                        <Link to="/" className="shrink-0 flex items-center gap-2">
 
                             <img
                                 src="/v-logo.png"
@@ -63,7 +63,7 @@ export function Navbar() {
                             />
                             <div className='flex flex-col items-center justify-center'>
                                 <span className=" text-xs tracking-tighter font-gujarati text-gray-900 dark:text-white">શ્રી સથવારા કડિયા</span>
-                                <span className='font-bold text-2xl font-gujarati bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent'>પ્રગતિ મંડળ</span>
+                                <span className='font-bold text-2xl font-gujarati bg-linear-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent'>પ્રગતિ મંડળ</span>
                             </div>
                         </Link>
                     </div>
@@ -142,7 +142,7 @@ export function Navbar() {
             </div>
 
             <div
-                className={`lg:hidden absolute w-full left-0 top-[64px] bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 flex flex-col z-[100] ${isOpen ? 'max-h-[calc(100vh-64px)] opacity-100 border-b border-gray-200 dark:border-gray-800 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
+                className={`lg:hidden absolute w-full left-0 top-[64px] bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 flex flex-col z-100 ${isOpen ? 'max-h-[calc(100vh-64px)] opacity-100 border-b border-gray-200 dark:border-gray-800 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
                     }`}
             >
                 <div className="px-2 pt-2 pb-3 space-y-1">

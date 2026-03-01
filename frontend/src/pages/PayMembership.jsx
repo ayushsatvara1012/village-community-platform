@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { CreditCard, Shield, CheckCircle, Loader2, Award, PartyPopper } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { CreditCard, Shield, CheckCircle, Loader2, Award } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function PayMembership() {
     const { user, refreshUser } = useAuth();
@@ -12,7 +12,24 @@ export default function PayMembership() {
     const [loading, setLoading] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
     const [sabhasadId, setSabhasadId] = useState(null);
+    const [razorpayReady, setRazorpayReady] = useState(false);
     const token = localStorage.getItem('village_app_token');
+
+    // Dynamically load Razorpay ONLY on this page — not as a render-blocking <head> script
+    useEffect(() => {
+        // Skip if already loaded (e.g., navigating back)
+        if (window.Razorpay) { setRazorpayReady(true); return; }
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => setRazorpayReady(true);
+        script.onerror = () => console.error('Failed to load Razorpay SDK');
+        document.body.appendChild(script);
+        return () => {
+            // Clean up on unmount to avoid leaking the script tag across routes
+            if (document.body.contains(script)) document.body.removeChild(script);
+        };
+    }, []);
 
     useEffect(() => {
         // Fetch membership fee
@@ -30,6 +47,10 @@ export default function PayMembership() {
     }, [user, navigate]);
 
     const handlePayment = async () => {
+        if (!razorpayReady) {
+            alert('Payment gateway is still loading. Please wait a moment and try again.');
+            return;
+        }
         setLoading(true);
         try {
             // Step 1: Create order
@@ -126,7 +147,7 @@ export default function PayMembership() {
                         <div className="absolute -top-2 -left-2 w-6 h-6 bg-yellow-400 rounded-full animate-bounce delay-100"></div>
                         <div className="absolute -top-1 -right-3 w-4 h-4 bg-blue-400 rounded-full animate-bounce delay-200"></div>
                         <div className="absolute -bottom-2 left-4 w-5 h-5 bg-purple-400 rounded-full animate-bounce delay-300"></div>
-                        <div className="relative w-32 h-32 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/40">
+                        <div className="relative w-32 h-32 bg-linear-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center shadow-2xl shadow-green-500/40">
                             <CheckCircle className="w-16 h-16 text-white" />
                         </div>
                     </div>
@@ -139,7 +160,7 @@ export default function PayMembership() {
                     </p>
 
                     {/* Sabhasad ID Card */}
-                    <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-6 shadow-2xl shadow-blue-500/30 mb-8 text-white relative overflow-hidden">
+                    <div className="bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-6 shadow-2xl shadow-blue-500/30 mb-8 text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
 
@@ -196,7 +217,7 @@ export default function PayMembership() {
                             'Family tree registration & management',
                         ].map((benefit, idx) => (
                             <div key={idx} className="flex items-start gap-3">
-                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
                                 <span className="text-base text-gray-600 dark:text-gray-300">{benefit}</span>
                             </div>
                         ))}
@@ -223,7 +244,7 @@ export default function PayMembership() {
 
                         {/* Security Note */}
                         <div className="flex items-start gap-3 text-sm text-gray-500 dark:text-gray-400 mb-8 bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700/50">
-                            <Shield className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <Shield className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
                             <p>Payments are securely processed through Razorpay. Your financial data is protected and never stored on our servers.</p>
                         </div>
 
@@ -231,7 +252,7 @@ export default function PayMembership() {
                         <Button
                             onClick={handlePayment}
                             disabled={loading}
-                            className="w-full py-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/30 transition-all rounded-xl h-14"
+                            className="w-full py-4 text-xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-xl shadow-blue-500/30 transition-all rounded-xl h-14"
                         >
                             {loading ? (
                                 <>

@@ -7,7 +7,17 @@ import { useAuth } from '../context/AuthContext';
  * @param {boolean} allowUnauthenticated - Allow unauthenticated users (for registration wizard)
  */
 export function ProtectedRoute({ children, allowedStatuses = ['member'], requireAdmin = false, allowUnauthenticated = false }) {
-    const { isAuthenticated, user, pendingRegistration } = useAuth();
+    const { isAuthenticated, user, pendingRegistration, loading } = useAuth();
+
+    // While auth check is in-flight, render a minimal inline spinner.
+    // This prevents premature redirects to /login before the token is verified.
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-950">
+                <div className="loader" aria-label="Loading..." />
+            </div>
+        );
+    }
 
     // Allow unauthenticated users with pending registration (for the wizard)
     if (!isAuthenticated && allowUnauthenticated && pendingRegistration) {
@@ -45,3 +55,4 @@ export function ProtectedRoute({ children, allowedStatuses = ['member'], require
 
     return children;
 }
+

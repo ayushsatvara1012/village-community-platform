@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button';
 import { IndianRupee, Users, TrendingUp, Download, CheckCircle, XCircle, Clock, Loader2, MapPin, Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp, MessageSquare, Filter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { FullScreenLoader } from '../components/ui/FullScreenLoader';
+import { initialsUrl } from '../utils/avatar';
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -640,7 +641,7 @@ export default function Dashboard() {
                                         {/* Profile Info */}
                                         <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                                             <img
-                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random&size=48`}
+                                                src={initialsUrl(member.full_name)}
                                                 alt={member.full_name}
                                                 className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700 shrink-0"
                                             />
