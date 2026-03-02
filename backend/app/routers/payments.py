@@ -34,7 +34,7 @@ class VerifyPaymentRequest(BaseModel):
     purpose: str = "general"
 
 def generate_sabhasad_id(db: Session) -> str:
-    """Generate next sequential Sabhasad ID like SAB-0001, SAB-0002, etc."""
+    """Generate next sequential Sabhasad ID like eSAB-0001, eSAB-0002, etc."""
     # Find highest existing sabhasad_id
     last = db.query(models.User).filter(
         models.User.sabhasad_id.isnot(None)
@@ -48,7 +48,7 @@ def generate_sabhasad_id(db: Session) -> str:
     else:
         num = 1
     
-    return f"SAB-{num:04d}"
+    return f"eSAB-{num:04d}"
 
 # ─── Membership Payment ───────────────────────────────────
 

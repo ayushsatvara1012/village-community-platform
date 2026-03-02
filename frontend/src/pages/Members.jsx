@@ -213,10 +213,10 @@ export default function Members() {
             {/* Main Content */}
             <main className="flex-1 p-4 md:p-6 lg:p-10 transition-all duration-300">
                 <div className="max-w-7xl mx-auto">
-                    {/* Header & Search */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                    {/* Header & Search - Sticky Mobile-First */}
+                    <div className="sticky top-16 z-20 pt-4 pb-4 mb-4 bg-gray-50/95 dark:bg-gray-900/95 backdrop-blur-xl -mx-4 md:-mx-6 lg:-mx-10 px-4 md:px-6 lg:px-10 border-b border-gray-200/50 dark:border-gray-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
                                 {selectedPosition === 'ALL_POSITIONS'
                                     ? 'Main Body'
                                     : selectedPosition
@@ -225,21 +225,29 @@ export default function Members() {
                                             ? villages.find(v => v.id === selectedVillage)?.name
                                             : 'All Members'}
                             </h1>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm">
+                            <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
                                 {selectedPosition === 'ALL_POSITIONS'
                                     ? `${filteredMembers.length} members with official positions`
                                     : `Showing ${filteredMembers.length} members`}
                             </p>
                         </div>
-                        <div className="relative w-full sm:w-72">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <div className="relative w-full sm:w-80 group">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Search by name or profession..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                className="w-full pl-10 pr-10 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 shadow-sm focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-medium text-sm"
                             />
+                            {searchQuery && (
+                                <button
+                                    onClick={() => setSearchQuery('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-all"
+                                >
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            )}
                         </div>
                     </div>
 

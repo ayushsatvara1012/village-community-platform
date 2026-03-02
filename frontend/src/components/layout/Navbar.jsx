@@ -102,7 +102,7 @@ export function Navbar() {
 
                                     {/* Dashboard button — only for members/admin */}
                                     {(user?.status === 'member' || user?.role === 'admin') && (
-                                        <Link to="/dashboard">
+                                        <Link to="/dashboard" title="Dashboard">
                                             <Button variant="outline" size="sm">
                                                 <LayoutDashboard className="w-4 h-4" />
                                             </Button>
@@ -178,8 +178,10 @@ export function Navbar() {
                                 </Link>
                                 {(user?.status === 'member' || user?.role === 'admin') && (
                                     <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-3 py-2">
-                                        <Button variant="outline" className="w-full justify-start">
+                                        <Button variant="outline" className="w-full justify-center">
                                             <LayoutDashboard className="w-4 h-4" />
+                                            <p >Dashboard</p>
+
                                         </Button>
                                     </Link>
                                 )}

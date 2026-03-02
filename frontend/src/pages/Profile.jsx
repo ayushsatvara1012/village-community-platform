@@ -743,6 +743,7 @@ export default function Profile() {
                                     <Edit2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
                                 </button>
                             </div>
+
                         </div>
 
                         <div className="relative px-6 sm:px-10 lg:px-12 pb-10">
@@ -814,6 +815,11 @@ export default function Profile() {
                                                 Born: {formatDate(user.date_of_birth)}
                                             </span>
                                         )}
+                                    </div>
+                                    <div className="flex mt-3 w-full items-center justify-center gap-2 group cursor-default lg:justify-end lg:mt-0 lg:absolute lg:bottom-5 lg:right-6">
+                                        <div className="px-3 py-1 bg-blue-50 dark:bg-blue-800/30 text-blue-800 dark:text-white border border-transparent dark:border-blue-400/40 rounded-full text-sm font-black uppercase backdrop-blur-sm">
+                                            {user.sabhasad_id || "ID Not Assigned"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
