@@ -13,10 +13,10 @@ SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 
 
-def send_otp_email(to_email: str, otp: str):
-    """Send OTP code code via Email."""
+def send_otp_email(to_email: str, otp: str, subject: str = "Your Login OTP"):
+    """Send OTP code via Email."""
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Your Admin Login OTP: {otp}"
+    msg["Subject"] = f"{subject}: {otp}"
     msg["From"] = SMTP_FROM
     msg["To"] = to_email
 

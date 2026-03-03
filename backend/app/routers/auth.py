@@ -250,7 +250,7 @@ def user_request_otp(request: schemas.UserOtpRequest, db: Session = Depends(data
 
     # If identifier is an email, try sending email
     if "@" in request.identifier:
-        email_sent = send_otp_email(request.identifier, otp)
+        email_sent = send_otp_email(request.identifier, otp, subject="Your Login OTP")
         if email_sent:
             return {"message": "OTP sent to your email. Please check your inbox."}
             
@@ -319,7 +319,7 @@ def admin_request_otp(request: AdminOtpRequest, db: Session = Depends(database.g
     }
 
     # Send OTP via email (falls back to console if SMTP not configured)
-    email_sent = send_otp_email(request.email, otp)
+    email_sent = send_otp_email(request.email, otp, subject="Admin Login OTP")
 
     if email_sent:
         return {"message": "OTP sent to your email. Please check your inbox."}
@@ -375,7 +375,7 @@ def forgot_password_request_otp(request: ForgotPasswordRequest, db: Session = De
         "otp": otp,
         "expires": time.time() + 300  # 5 minutes
     }
-    email_sent = send_otp_email(request.email, otp)
+    email_sent = send_otp_email(request.email, otp, subject="Password Reset OTP")
     if email_sent:
         return {"message": "OTP sent to your email. Please check your inbox."}
     else:
