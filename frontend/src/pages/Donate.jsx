@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
+import { getFullImageUrl } from '../utils/avatar';
 import { Button } from '../components/ui/Button';
 import { Heart, Share2, Loader2, AlertCircle, HandHeart, Plus, Upload, X, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Skeleton from '../components/ui/Skeleton';
+import { CampaignGridSkeleton } from '../components/skeletons/CampaignCardSkeleton';
 
 export default function Donate() {
     const [events, setEvents] = useState([]);
@@ -21,32 +25,45 @@ export default function Donate() {
     const [newEventData, setNewEventData] = useState({ title: '', description: '', goal: '', category: 'General' });
     const [newEventImage, setNewEventImage] = useState(null);
     const [editingEvent, setEditingEvent] = useState(null);
+    const [razorpayReady, setRazorpayReady] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
+    // Dynamically load Razorpay SDK
+    useEffect(() => {
+        if (window.Razorpay) {
+            setRazorpayReady(true);
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => setRazorpayReady(true);
+        script.onerror = () => console.error('Failed to load Razorpay SDK');
+        document.body.appendChild(script);
+        return () => {
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+        };
+    }, []);
+
+    // API_URL is now centralized in src/config.js
 
     const fetchEvents = () => {
+        setIsLoading(true);
         fetch(`${API_URL}/events/`)
             .then(res => res.json())
-            .then(data => setEvents(data))
-            .catch(err => console.error("Failed to fetch events:", err));
+            .then(data => {
+                setEvents(data);
+                setIsLoading(false);
+            })
+            .catch(err => {
+                console.error("Failed to fetch events:", err);
+                setIsLoading(false);
+            });
     };
 
-    const getImageUrl = (url) => {
-        if (!url) return '';
-        // If it starts with http, it might be a legacy hardcoded 127.0.0.1 or a placeholder
-        if (url.startsWith('http')) {
-            // Fix legacy hardcoded 127.0.0.1 by replacing it with current API_URL
-            if (url.includes('127.0.0.1:8000')) {
-                return url.replace('http://127.0.0.1:8000', API_URL);
-            }
-            return url;
-        }
-        // If it's a relative path starting with /, prepend API_URL
-        if (url.startsWith('/')) {
-            return `${API_URL}${url}`;
-        }
-        return url;
-    };
+    // getImageUrl has been replaced by the centralized getFullImageUrl from ../utils/avatar
 
     useEffect(() => {
         fetchEvents();
@@ -91,6 +108,11 @@ export default function Donate() {
                 }
             }
         };
+        if (!razorpayReady || !window.Razorpay) {
+            setError('Payment gateway is still loading. Please wait a moment.');
+            setIsDonating(false);
+            return;
+        }
         const rzp = new window.Razorpay(options);
         rzp.on('payment.failed', function (response) {
             setIsDonating(false);
@@ -456,77 +478,105 @@ export default function Donate() {
                 </div>
 
                 {/* General Donation Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                    className="mb-12 bg-linear-to-br from-rose-600 via-red-600 to-orange-500 rounded-2xl shadow-2xl shadow-red-500/20 p-8 md:p-10 text-white relative overflow-hidden"
-                >
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none"></div>
-
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-                        <div className="shrink-0">
-                            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                                <HandHeart className="w-10 h-10 text-white" />
+                {isLoading ? (
+                    <div className="mb-12 bg-gray-200 dark:bg-gray-800 rounded-2xl p-8 md:p-10 relative overflow-hidden animate-pulse">
+                        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                            <Skeleton className="w-20 h-20 rounded-2xl shrink-0" />
+                            <div className="flex-1 space-y-4">
+                                <Skeleton className="h-8 w-3/4" />
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-2/3" />
                             </div>
-                        </div>
-                        <div className="flex-1 text-center md:text-left">
-                            <h2 className="text-2xl md:text-3xl font-bold mb-2">Make a General Donation</h2>
-                            <p className="text-red-100 text-lg max-w-xl">
-                                Support our community with a general contribution. Your donation goes towards village development, healthcare, education, and more.
-                            </p>
-                        </div>
-                        <div className="shrink-0">
-                            <Button
-                                className="bg-white text-red-600 hover:bg-red-50 border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/10"
-                                onClick={() => { setShowGeneralDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
-                            >
-                                <Heart className="w-5 h-5 mr-2 fill-current" />
-                                Donate Now
-                            </Button>
+                            <Skeleton className="h-12 w-32 rounded-lg shrink-0" />
                         </div>
                     </div>
-                </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                        className="mb-12 bg-linear-to-br from-rose-600 via-red-600 to-orange-500 rounded-2xl shadow-2xl shadow-red-500/20 p-8 md:p-10 text-white relative overflow-hidden"
+                    >
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-2xl pointer-events-none"></div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                            <div className="shrink-0">
+                                <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                                    <HandHeart className="w-10 h-10 text-white" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center md:text-left">
+                                <h2 className="text-2xl md:text-3xl font-bold mb-2">Make a General Donation</h2>
+                                <p className="text-red-100 text-lg max-w-xl">
+                                    Support our community with a general contribution. Your donation goes towards village development, healthcare, education, and more.
+                                </p>
+                            </div>
+                            <div className="shrink-0">
+                                <Button
+                                    className="bg-white text-red-600 hover:bg-red-50 border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/10"
+                                    onClick={() => { setShowGeneralDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
+                                >
+                                    <Heart className="w-5 h-5 mr-2 fill-current" />
+                                    Donate Now
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Special Welfare Fund Card — New Fixed Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: 0.1 }}
-                    className="mb-12 bg-linear-to-br from-indigo-700 via-blue-800 to-cyan-600 rounded-2xl shadow-2xl shadow-blue-500/20 p-8 md:p-10 text-white relative overflow-hidden"
-                >
-                    {/* Decorative elements */}
-                    <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none"></div>
-                    <div className="absolute bottom-0 left-0 w-56 h-56 bg-cyan-400/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none"></div>
-
-                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-                        <div className="shrink-0">
-                            <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                                <Plus className="w-10 h-10 text-white" />
+                {isLoading ? (
+                    <div className="mb-12 bg-gray-200 dark:bg-gray-800 rounded-2xl p-8 md:p-10 relative overflow-hidden animate-pulse">
+                        <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                            <Skeleton className="w-20 h-20 rounded-2xl shrink-0" />
+                            <div className="flex-1 space-y-4">
+                                <Skeleton className="h-8 w-1/2" />
+                                <Skeleton className="h-4 w-full" />
+                                <Skeleton className="h-4 w-3/4" />
                             </div>
-                        </div>
-                        <div className="flex-1 text-center md:text-left">
-                            <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                                <h2 className="text-2xl md:text-3xl font-bold italic">Special Welfare Fund</h2>
-                                <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/30 rounded text-xs font-bold uppercase tracking-tighter">Fixed Asset Fund</span>
-                            </div>
-                            <p className="text-blue-100 text-lg max-w-xl">
-                                Dedicated fund for community trust and infrastructure development. These contributions are settled into our primary welfare foundation account.
-                            </p>
-                        </div>
-                        <div className="shrink-0">
-                            <Button
-                                className="bg-indigo-500 hover:bg-indigo-400 text-white border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/20"
-                                onClick={() => { setShowSpecialDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
-                            >
-                                <Heart className="w-5 h-5 mr-2 fill-current" />
-                                Support Fund
-                            </Button>
+                            <Skeleton className="h-12 w-32 rounded-lg shrink-0" />
                         </div>
                     </div>
-                </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                        className="mb-12 bg-linear-to-br from-indigo-700 via-blue-800 to-cyan-600 rounded-2xl shadow-2xl shadow-blue-500/20 p-8 md:p-10 text-white relative overflow-hidden"
+                    >
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 w-56 h-56 bg-cyan-400/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl pointer-events-none"></div>
+
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                            <div className="shrink-0">
+                                <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+                                    <Plus className="w-10 h-10 text-white" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center md:text-left">
+                                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                                    <h2 className="text-2xl md:text-3xl font-bold italic">Special Welfare Fund</h2>
+                                    <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/30 rounded text-xs font-bold uppercase tracking-tighter">Fixed Asset Fund</span>
+                                </div>
+                                <p className="text-blue-100 text-lg max-w-xl">
+                                    Dedicated fund for community trust and infrastructure development. These contributions are settled into our primary welfare foundation account.
+                                </p>
+                            </div>
+                            <div className="shrink-0">
+                                <Button
+                                    className="bg-indigo-500 hover:bg-indigo-400 text-white border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/20"
+                                    onClick={() => { setShowSpecialDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
+                                >
+                                    <Heart className="w-5 h-5 mr-2 fill-current" />
+                                    Support Fund
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Events Section */}
                 <div className="mb-8 flex items-center justify-between">
@@ -541,7 +591,9 @@ export default function Donate() {
                     )}
                 </div>
 
-                {events.length === 0 ? (
+                {isLoading ? (
+                    <CampaignGridSkeleton count={2} />
+                ) : events.length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
                         <p className="text-base">No active campaigns right now — but you can still make a general donation above!</p>
                     </div>
@@ -557,7 +609,7 @@ export default function Donate() {
                             >
                                 <div className="absolute inset-0">
                                     <img
-                                        src={getImageUrl(event.image)}
+                                        src={getFullImageUrl(event.image)}
                                         alt={event.title}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     />

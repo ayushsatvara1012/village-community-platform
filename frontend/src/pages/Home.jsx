@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Calendar, Megaphone, ArrowRight, BookOpen, Heart, Users, Trophy, HandHeart, Sparkles } from 'lucide-react';
 import { Footer } from '../components/layout/Footer';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 export default function Home() {
     const { user, isAuthenticated } = useAuth();
@@ -16,16 +17,12 @@ export default function Home() {
     const [memberCount, setMemberCount] = useState('...');
 
     useEffect(() => {
-        const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://127.0.0.1:8000'
-            : 'https://village-community-platform.onrender.com');
-
-        fetch(`${API_BASE}/villages/`)
+        fetch(`${API_URL}/villages/`)
             .then(res => res.json())
             .then(data => setVillageCount(data.length))
             .catch(err => console.error("Failed to fetch village count:", err));
 
-        fetch(`${API_BASE}/members/`)
+        fetch(`${API_URL}/members/`)
             .then(res => res.json())
             .then(data => setMemberCount(data.length))
             .catch(err => console.error("Failed to fetch member count:", err));

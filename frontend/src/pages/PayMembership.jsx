@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { CreditCard, Shield, CheckCircle, Loader2, Award } from 'lucide-react';
@@ -33,7 +34,7 @@ export default function PayMembership() {
 
     useEffect(() => {
         // Fetch membership fee
-        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/payments/membership/fee')
+        fetch(`${API_URL}/payments/membership/fee`)
             .then(res => res.json())
             .then(data => setFee(data.amount))
             .catch(console.error);
@@ -54,7 +55,7 @@ export default function PayMembership() {
         setLoading(true);
         try {
             // Step 1: Create order
-            const orderRes = await fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/payments/membership/create-order', {
+            const orderRes = await fetch(`${API_URL}/payments/membership/create-order`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -77,7 +78,7 @@ export default function PayMembership() {
                 handler: async function (response) {
                     // Step 3: Verify payment
                     try {
-                        const verifyRes = await fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/payments/membership/verify', {
+                        const verifyRes = await fetch(`${API_URL}/payments/membership/verify`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

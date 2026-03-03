@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { dicebearUrl, getAvatarOptions, initialsUrl } from '../utils/avatar';
+import { API_URL } from '../config';
+import { dicebearUrl, getAvatarOptions, initialsUrl, getFullImageUrl } from '../utils/avatar';
 
 const AuthContext = createContext();
 
@@ -13,7 +14,7 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [pendingRegistration, setPendingRegistration] = useState(null);
     const navigate = useNavigate();
-    const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
+    // API_URL is now centralized in src/config.js
 
     useEffect(() => {
         checkUserLoggedIn();
@@ -44,8 +45,7 @@ export function AuthProvider({ children }) {
     // Build a profile image URL, prioritizing uploaded personal photo then DiceBear
     const buildAvatarUrl = (profileImage, avatarStyle, fullName) => {
         if (profileImage) {
-            // If it's a relative path, prepend API_URL
-            return profileImage.startsWith('http') ? profileImage : `${API_URL}${profileImage}`;
+            return getFullImageUrl(profileImage);
         }
         if (avatarStyle) {
             // avatarStyle is now the toon-head seed (e.g., "Abby")

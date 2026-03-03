@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Search, MapPin, ChevronDown, ChevronUp, Briefcase, Edit2, Check, X, Loader2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { dicebearUrl, getAvatarOptions } from '../utils/avatar';
+import { API_URL } from '../config';
+import { dicebearUrl, getAvatarOptions, getFullImageUrl } from '../utils/avatar';
 
 export default function Members() {
     const [selectedVillage, setSelectedVillage] = useState(null);
@@ -25,10 +26,10 @@ export default function Members() {
         try {
             const token = localStorage.getItem('village_app_token');
             const [membersRes, villagesRes] = await Promise.all([
-                fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/', {
+                fetch(`${API_URL}/members/`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 }),
-                fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
+                fetch(`${API_URL}/villages/`)
             ]);
 
             if (membersRes.ok && villagesRes.ok) {
@@ -37,10 +38,9 @@ export default function Members() {
 
                 const enhancedMembers = membersData.map(member => {
                     let photoUrl;
-                    const BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
 
                     if (member.profile_image) {
-                        photoUrl = `${BASE_URL}${member.profile_image}`;
+                        photoUrl = getFullImageUrl(member.profile_image);
                     } else if (member.avatar_style) {
                         photoUrl = dicebearUrl(member.avatar_style, getAvatarOptions(member.avatar_style));
                     } else {
@@ -82,7 +82,7 @@ export default function Members() {
         try {
             setIsUpdating(true);
             const token = localStorage.getItem('village_app_token');
-            const res = await fetch(((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + `/members/${memberId}/position`), {
+            const res = await fetch(`${API_URL}/members/${memberId}/position`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

@@ -8,7 +8,8 @@ import {
     RotateCcw, Edit2, Download, Award, ShieldCheck, Camera,
     ZoomIn, ZoomOut, Check, Upload, RefreshCw, ImageOff, Calendar
 } from 'lucide-react';
-import { DICEBEAR_AVATARS, dicebearUrl, getAvatarOptions, initialsUrl } from '../utils/avatar';
+import { API_URL } from '../config';
+import { DICEBEAR_AVATARS, dicebearUrl, getAvatarOptions, initialsUrl, getFullImageUrl } from '../utils/avatar';
 
 
 const compressImage = (file) => {
@@ -306,7 +307,7 @@ function ImageCropModal({ imageSrc, onConfirm, onCancel, uploading, initialScale
 }
 
 
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
+// API_URL is now centralized in src/config.js
 
 const RELATIONS = ['Father', 'Mother', 'Spouse', 'Son', 'Daughter', 'Brother', 'Sister', 'Grandfather', 'Grandmother', 'Uncle', 'Aunt'];
 
@@ -619,7 +620,7 @@ export default function Profile() {
     // Re-open the crop modal for an already-uploaded image
     const handleReCrop = () => {
         if (!rawCropSrc && !user?.profile_image) return;
-        const src = rawCropSrc || `${API_URL}${user.profile_image}`;
+        const src = rawCropSrc || getFullImageUrl(user.profile_image);
         // For server images we don't have precomputed dims, so pass null (modal will compute onLoad)
         setCropInitial(null);
         setRawCropSrc(src);
@@ -1153,7 +1154,7 @@ export default function Profile() {
                                                 >
                                                     <img
                                                         src={imageType === 'photo' && user?.profile_image
-                                                            ? `${API_URL}${user.profile_image}`
+                                                            ? getFullImageUrl(user.profile_image)
                                                             : (selectedAvatar ? dicebearUrl(selectedAvatar, getAvatarOptions(selectedAvatar)) : (user?.avatar || dicebearUrl(user?.full_name || 'User', getAvatarOptions(user?.avatar_style))))}
                                                         alt="Profile Preview"
                                                         className="w-32 h-32 sm:w-40 sm:h-40 object-cover object-top"

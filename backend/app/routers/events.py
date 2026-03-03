@@ -5,10 +5,8 @@ from pydantic import BaseModel
 from .. import models, schemas, database
 from ..config import razorpay_client, RAZORPAY_KEY_ID
 from .auth import get_current_user
+from ..cloudinary_config import upload_image, delete_image
 import uuid
-import hmac
-import hashlib
-import os
 
 router = APIRouter(
     prefix="/events",
@@ -23,24 +21,12 @@ async def upload_event_image(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
         
-    file.file.seek(0, 2)
-    file_size = file.file.tell()
-    await file.seek(0)
-    
-    if file_size > 5 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="Image must be less than 5MB")
+    # Upload to Cloudinary
+    image_url = upload_image(file.file, folder="events")
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
         
-    ext = file.filename.split('.')[-1]
-    if ext.lower() not in ["jpg", "jpeg", "png", "webp"]:
-        raise HTTPException(status_code=400, detail="Only jpg, jpeg, png, and webp are allowed")
-
-    unique_filename = f"{uuid.uuid4().hex}.{ext}"
-    file_path = os.path.join("static", unique_filename)
-    
-    with open(file_path, "wb") as f:
-        f.write(await file.read())
-        
-    return {"url": f"/static/{unique_filename}"}
+    return {"url": image_url}
 
 @router.get("/", response_model=List[schemas.DonationEvent])
 def list_events(db: Session = Depends(database.get_db)):
@@ -82,6 +68,11 @@ def update_event(
         raise HTTPException(status_code=404, detail="Event not found")
     
     update_data = event_update.dict(exclude_unset=True)
+    
+    # If image is being updated, delete the old one
+    if "image" in update_data and db_event.image and update_data["image"] != db_event.image:
+        delete_image(db_event.image)
+
     for key, value in update_data.items():
         setattr(db_event, key, value)
     
@@ -102,6 +93,10 @@ def delete_event(
     if not db_event:
         raise HTTPException(status_code=404, detail="Event not found")
     
+    # Delete image from Cloudinary if it exists
+    if db_event.image:
+        delete_image(db_event.image)
+
     db.delete(db_event)
     db.commit()
     return {"message": "Event deleted successfully"}

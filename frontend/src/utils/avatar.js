@@ -1,3 +1,5 @@
+import { API_URL } from '../config';
+
 // 15 curated DiceBear avatars with specific customizations (verified for v9.x toon-head)
 export const DICEBEAR_AVATARS = [
     { seed: 'Ram', options: { skinColor: 'f1c3a5', mouth: 'smile', hairColor: '2c1b18', hair: 'sideComed', eyes: 'humble', beard: 'fullBeard', clothes: 'turtleNeck', clothesColor: 'f97316', backgroundColor: 'b6e3f4' } },
@@ -52,4 +54,29 @@ export const initialsUrl = (name) => {
         backgroundColor: '6366f1,a855f7,ec4899,f43f5e,f97316,eab308,22c55e,06b6d4,3b82f6'
     }).toString();
     return `https://api.dicebear.com/9.x/initials/svg?${params}`;
+};
+
+/**
+ * Robustly converts a potentially relative image path into a full URL.
+ * Also handles legacy localhost URLs.
+ */
+export const getFullImageUrl = (url) => {
+    if (!url) return '';
+
+    // If it's already an absolute URL (starts with http)
+    if (url.startsWith('http')) {
+        // Fix legacy hardcoded 127.0.0.1 by replacing it with current API_URL
+        if (url.includes('127.0.0.1:8000') && !API_URL.includes('127.0.0.1:8000')) {
+            return url.replace('http://127.0.0.1:8000', API_URL);
+        }
+        return url;
+    }
+
+    // If it's a relative path (starts with /), prepend API_URL
+    if (url.startsWith('/')) {
+        return `${API_URL}${url}`;
+    }
+
+    // Default fallback
+    return url;
 };

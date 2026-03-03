@@ -8,9 +8,7 @@ import { FullScreenLoader } from './components/ui/FullScreenLoader'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <Suspense fallback={<FullScreenLoader />}>
-        <App />
-      </Suspense>
+      <App />
     </BrowserRouter>
   </StrictMode>,
 )

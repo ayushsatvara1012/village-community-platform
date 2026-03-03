@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/Button';
@@ -33,7 +34,7 @@ export default function Application() {
     useEffect(() => {
         const fetchVillages = async () => {
             try {
-                const response = await fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/');
+                const response = await fetch(`${API_URL}/villages/`);
                 if (response.ok) {
                     const data = await response.json();
                     setVillages(data);

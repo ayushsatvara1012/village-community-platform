@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Loader2, Search } from 'lucide-react';
+import { API_URL } from '../config';
 
 export default function Villages() {
     const [villages, setVillages] = useState([]);
@@ -12,7 +13,7 @@ export default function Villages() {
 
     const fetchVillages = () => {
         setLoading(true);
-        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
+        fetch(`${API_URL}/villages/`)
             .then(res => res.json())
             .then(data => {
                 // Sort alphabetically by name

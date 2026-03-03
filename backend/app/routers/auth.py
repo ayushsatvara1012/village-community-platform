@@ -2,16 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, File, Uploa
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from .. import models, schemas, database
 from ..email_utils import send_otp_email
 import os
-import random
 import time
-import shutil
+from ..cloudinary_config import upload_image, delete_image
 
 router = APIRouter(
     prefix="/auth",
@@ -26,6 +25,7 @@ ACCESS_TOKEN_EXPIRE_DAYS = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
 
 # In-memory OTP store: { email: { "otp": "123456", "expires": timestamp } }
 otp_store = {}
@@ -65,6 +65,18 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
     if user is None:
         raise credentials_exception
     return user
+
+async def get_current_user_optional(token: Annotated[Optional[str], Depends(oauth2_scheme_optional)], db: Session = Depends(database.get_db)):
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        return db.query(models.User).filter(models.User.email == username).first()
+    except JWTError:
+        return None
 
 # ─── Standard Auth Routes ─────────────────────────────────────
 
@@ -162,17 +174,17 @@ async def upload_profile_image(
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image.")
 
-    # Create unique filename
-    ext = file.filename.split(".")[-1] if "." in file.filename else "jpg"
-    filename = f"user_{current_user.id}_{int(time.time())}.{ext}"
-    file_path = f"static/profile_images/{filename}"
+    # Upload to Cloudinary
+    image_url = upload_image(file.file, folder="profile_images")
+    if not image_url:
+        raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
 
-    # Save file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Delete old image if it exists on Cloudinary
+    if current_user.profile_image:
+        delete_image(current_user.profile_image)
 
     # Update user profile
-    current_user.profile_image = f"/static/profile_images/{filename}"
+    current_user.profile_image = image_url
     db.commit()
     db.refresh(current_user)
 
