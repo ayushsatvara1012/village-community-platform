@@ -10,6 +10,7 @@ from .. import models, schemas, database
 from ..email_utils import send_otp_email
 import os
 import time
+import random
 from ..cloudinary_config import upload_image, delete_image
 
 router = APIRouter(
@@ -174,21 +175,37 @@ async def upload_profile_image(
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image.")
 
-    # Upload to Cloudinary
-    image_url = upload_image(file.file, folder="profile_images")
-    if not image_url:
-        raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary")
+    try:
+        # Read the file content - this is more robust for SpooldTemporaryFile
+        file_content = await file.read()
+        if not file_content:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+            
+        # Upload to Cloudinary
+        image_url = upload_image(file_content, folder="profile_images")
+        if not image_url:
+            raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary. Please check server logs.")
 
-    # Delete old image if it exists on Cloudinary
-    if current_user.profile_image:
-        delete_image(current_user.profile_image)
+        # Delete old image if it exists on Cloudinary
+        if current_user.profile_image:
+            try:
+                delete_image(current_user.profile_image)
+            except Exception as e:
+                print(f"Non-critical error deleting old image: {e}")
 
-    # Update user profile
-    current_user.profile_image = image_url
-    db.commit()
-    db.refresh(current_user)
+        # Update user profile
+        current_user.profile_image = image_url
+        db.commit()
+        db.refresh(current_user)
 
-    return current_user
+        return current_user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in upload_profile_image: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal server error during upload: {str(e)}")
 
 
 # ─── User OTP Login ──────────────────────────────────────────

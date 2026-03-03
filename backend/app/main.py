@@ -20,9 +20,20 @@ from fastapi import Request
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    with open("trace.log", "w") as f:
-        f.write(traceback.format_exc())
-    return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+    err_trace = traceback.format_exc()
+    print(f"GLOBAL ERROR: {str(exc)}")
+    print(err_trace)
+    
+    try:
+        with open("trace.log", "w") as f:
+            f.write(err_trace)
+    except Exception as e:
+        print(f"Failed to write to trace.log: {e}")
+        
+    return JSONResponse(
+        status_code=500, 
+        content={"message": "Internal Server Error", "detail": str(exc)}
+    )
 
 import os
 
@@ -35,21 +46,24 @@ origins = [
     "http://127.0.0.1:5174",
     "http://127.0.0.1:3000",
     "https://village-community-platform.vercel.app",
+    "https://village-community-platform.onrender.com",
 ]
 
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
     # Remove any trailing spaces, newlines, or slashes that might cause CORS to fail
     clean_url = frontend_url.strip().rstrip('/')
-    origins.append(clean_url)
+    if clean_url not in origins:
+        origins.append(clean_url)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://village-community-platform-.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 @app.get("/")
