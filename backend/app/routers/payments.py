@@ -651,7 +651,7 @@ def get_payment_receipt(
                     <div class="signatory">
                         <p class="signature-font">Authorized Staff</p>
                         <p class="sig-label">Authorized Signatory</p>
-                        <p style="font-size: 9px; color: var(--navy); margin-top: 5px;">FOR, SREE SATHWARA<br>KADIA PRAGATI MANDAL</p>
+                        <p style="font-size: 9px; color: var(--navy); margin-top: 5px;">FOR, SHREE SATHWARA<br>KADIA PRAGATI MANDAL</p>
                     </div>
                     <div class="seal-container">
                         <div class="verified-seal">
