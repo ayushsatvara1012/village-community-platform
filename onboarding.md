@@ -82,7 +82,3 @@ If you only read 3 files, read these:
 1.  **`backend/app/models.py`**: Touching this is "Open Heart Surgery." A tiny change here requires a database migration (Alembic) or it will crash the whole system.
 2.  **`frontend/src/context/AuthContext.js`**: This is the "Foundation." If you break the logic here, nobody can log in, and every single protected page will redirect to `/login`.
 3.  **`backend/app/routers/payments.py`**: This handles real money (Razorpay). Bugs here don't just cause errors; they cause financial discrepancies. Tread carefully!
-
----
-
-**Ready to dive in? Which area do you want to drill deeper into—the Family Tree logic, the Payment integration, or the Admin approval workflow?**
