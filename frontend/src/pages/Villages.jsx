@@ -1,28 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MapPin, Loader2, Search } from 'lucide-react';
-import { API_URL } from '../config';
+import { useVillages } from '../hooks/useVillages';
 
 export default function Villages() {
-    const [villages, setVillages] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const { data: rawVillages = [], isLoading: loading } = useVillages();
 
-    useEffect(() => {
-        fetchVillages();
-    }, []);
-
-    const fetchVillages = () => {
-        setLoading(true);
-        fetch(`${API_URL}/villages/`)
-            .then(res => res.json())
-            .then(data => {
-                // Sort alphabetically by name
-                const sorted = data.sort((a, b) => a.name.localeCompare(b.name));
-                setVillages(sorted);
-            })
-            .catch(err => console.error("Failed to fetch villages:", err))
-            .finally(() => setLoading(false));
-    };
+    const villages = [...rawVillages].sort((a, b) => a.name.localeCompare(b.name));
 
     const filteredVillages = villages.filter(v =>
         v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
