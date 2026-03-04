@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 
 class VillageBase(BaseModel):
     name: str
@@ -27,7 +27,7 @@ class UserBase(BaseModel):
     address: Optional[str] = None
     village_id: Optional[int] = None
     profession: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
+    date_of_birth: Optional[date] = None
 
 class UserCreate(UserBase):
     password: str
@@ -39,6 +39,9 @@ class UserResponse(UserBase):
     profession: Optional[str] = None
     admin_comment: Optional[str] = None
     sabhasad_id: Optional[str] = None
+    position: Optional[str] = None
+    avatar_style: Optional[str] = None  # DiceBear style:seed string
+    profile_image: Optional[str] = None # Path/URL to personal photo
     created_at: datetime
     village: Optional[Village] = None
     
@@ -84,7 +87,15 @@ class DonationEventBase(BaseModel):
     image: str
     category: str
 
+class DonationEventUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    goal: Optional[float] = None
+    image: Optional[str] = None
+    category: Optional[str] = None
+
 class DonationEventCreate(DonationEventBase):
+
     pass
 
 class DonationEvent(DonationEventBase):
@@ -150,4 +161,9 @@ class UserUpdate(BaseModel):
     phone_number: Optional[str] = None
     address: Optional[str] = None
     profession: Optional[str] = None
-    date_of_birth: Optional[datetime] = None
+    date_of_birth: Optional[date] = None
+    avatar_style: Optional[str] = None  # DiceBear style:seed string
+    profile_image: Optional[str] = None # Path/URL to personal photo
+
+class UserPositionUpdate(BaseModel):
+    position: Optional[str] = None

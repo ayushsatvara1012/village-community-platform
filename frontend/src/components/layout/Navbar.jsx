@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../ui/Button';
-import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard, MapPin } from 'lucide-react';
+import { Menu, X, Home, Users, Heart, LayoutDashboard, LogOut, ClipboardCheck, CreditCard, MapPin, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { initialsUrl } from '../../utils/avatar';
 
 export function Navbar() {
     const { user, logout, isAuthenticated } = useAuth();
@@ -13,6 +14,7 @@ export function Navbar() {
     const getNavLinks = () => {
         const links = [
             { name: 'Home', path: '/', icon: Home },
+            { name: 'History', path: '/history', icon: BookOpen },
             { name: 'Villages', path: '/villages', icon: MapPin }
         ];
 
@@ -44,8 +46,7 @@ export function Navbar() {
     };
 
     const getAvatarUrl = () => {
-        const name = getUserDisplayName();
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=40`;
+        return user?.avatar || initialsUrl(getUserDisplayName());
     };
 
     return (
@@ -53,15 +54,17 @@ export function Navbar() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16">
                     <div className="flex items-center">
-                        <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+                        <Link to="/" className="shrink-0 flex items-center gap-2">
 
                             <img
                                 src="/v-logo.png"
                                 alt="Logo"
                                 className="w-10 h-10 object-contain"
                             />
-
-                            <span className="font-bold font-gujarati text-2xl text-gray-900 dark:text-white">સતવારા <span className='text-orange-800'>૩૨</span> સમાજ</span>
+                            <div className='flex flex-col items-center justify-center'>
+                                <span className=" text-xs tracking-tighter font-gujarati text-gray-900 dark:text-white">શ્રી સથવારા કડિયા</span>
+                                <span className='font-bold text-2xl font-gujarati bg-linear-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent'>પ્રગતિ મંડળ</span>
+                            </div>
                         </Link>
                     </div>
 
@@ -99,7 +102,7 @@ export function Navbar() {
 
                                     {/* Dashboard button — only for members/admin */}
                                     {(user?.status === 'member' || user?.role === 'admin') && (
-                                        <Link to="/dashboard">
+                                        <Link to="/dashboard" title="Dashboard">
                                             <Button variant="outline" size="sm">
                                                 <LayoutDashboard className="w-4 h-4" />
                                             </Button>
@@ -112,7 +115,7 @@ export function Navbar() {
                                     {(user?.status === 'approved' || user?.status === 'member' || user?.role === 'admin') && (
                                         <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                                             <img src={getAvatarUrl()} alt={getUserDisplayName()} className="w-8 h-8 rounded-full bg-gray-200" />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">{getUserDisplayName()}</span>
+                                            {/* <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden lg:block">{getUserDisplayName()}</span> */}
                                         </Link>
                                     )}
                                 </div>
@@ -139,7 +142,7 @@ export function Navbar() {
             </div>
 
             <div
-                className={`lg:hidden absolute w-full left-0 top-[64px] bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 flex flex-col z-[100] ${isOpen ? 'max-h-[calc(100vh-64px)] opacity-100 border-b border-gray-200 dark:border-gray-800 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
+                className={`lg:hidden absolute w-full left-0 top-[64px] bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 flex flex-col z-100 ${isOpen ? 'max-h-[calc(100vh-64px)] opacity-100 border-b border-gray-200 dark:border-gray-800 overflow-y-auto' : 'max-h-0 opacity-0 pointer-events-none overflow-hidden'
                     }`}
             >
                 <div className="px-2 pt-2 pb-3 space-y-1">
@@ -175,13 +178,15 @@ export function Navbar() {
                                 </Link>
                                 {(user?.status === 'member' || user?.role === 'admin') && (
                                     <Link to="/dashboard" onClick={() => setIsOpen(false)} className="block px-3 py-2">
-                                        <Button variant="outline" className="w-full justify-start">
+                                        <Button variant="outline" className="w-full justify-center">
                                             <LayoutDashboard className="w-4 h-4" />
+                                            <p >Dashboard</p>
+
                                         </Button>
                                     </Link>
                                 )}
                                 <div className="px-3 py-2">
-                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={()=>{logout(); setIsOpen(false)}}>
+                                    <Button variant="ghost" className="w-full justify-center text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => { logout(); setIsOpen(false) }}>
                                         <LogOut className="w-4 h-4 mr-2" />
                                         Logout
                                     </Button>

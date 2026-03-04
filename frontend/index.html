@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/v-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>સતવારા ૩૨ સમાજ</title>
+    <title>શ્રી સથવારા કડિયા પ્રગતિ મંડળ, અમદાવાદ</title>
     <style>
       body {
         background-color: #242424;
@@ -65,10 +65,13 @@
         100% { transform: translate3d(0,0,0) scale(0.8) rotate(0.5turn); }
       }
     </style>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!-- Preload LCP hero image for instant first paint -->
+    <link rel="preload" as="image" href="/bg-sat.webp" fetchpriority="high" />
+    <!-- Preconnect to font origins — both need crossorigin for CORS font files -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gujarati:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Razorpay is loaded dynamically in PayMembership.jsx (render-blocking removed) -->
   </head>
   <body>
     <div id="initial-loader">

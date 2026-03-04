@@ -59,3 +59,10 @@ body {
 @keyframes l12 { 
   100%{transform: rotate(.5turn)}
 }
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

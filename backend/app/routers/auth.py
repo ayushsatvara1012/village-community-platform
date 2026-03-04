@@ -1,16 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 from .. import models, schemas, database
 from ..email_utils import send_otp_email
 import os
-import random
 import time
+import random
+from ..cloudinary_config import upload_image, delete_image
 
 router = APIRouter(
     prefix="/auth",
@@ -25,6 +26,7 @@ ACCESS_TOKEN_EXPIRE_DAYS = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="auth/token", auto_error=False)
 
 # In-memory OTP store: { email: { "otp": "123456", "expires": timestamp } }
 otp_store = {}
@@ -65,6 +67,18 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
         raise credentials_exception
     return user
 
+async def get_current_user_optional(token: Annotated[Optional[str], Depends(oauth2_scheme_optional)], db: Session = Depends(database.get_db)):
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        return db.query(models.User).filter(models.User.email == username).first()
+    except JWTError:
+        return None
+
 # ─── Standard Auth Routes ─────────────────────────────────────
 
 @router.post("/register", response_model=schemas.UserResponse)
@@ -92,6 +106,8 @@ def register(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
 
 @router.post("/token", response_model=schemas.Token)
 def login_for_access_token(
@@ -149,6 +165,48 @@ async def update_user_me(
     db.refresh(current_user)
     return current_user
 
+@router.post("/upload-profile-image", response_model=schemas.UserResponse)
+async def upload_profile_image(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    # Validate file type
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image.")
+
+    try:
+        # Read the file content - this is more robust for SpooldTemporaryFile
+        file_content = await file.read()
+        if not file_content:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+            
+        # Upload to Cloudinary
+        image_url = upload_image(file_content, folder="profile_images")
+        if not image_url:
+            raise HTTPException(status_code=500, detail="Failed to upload image to Cloudinary. Please check server logs.")
+
+        # Delete old image if it exists on Cloudinary
+        if current_user.profile_image:
+            try:
+                delete_image(current_user.profile_image)
+            except Exception as e:
+                print(f"Non-critical error deleting old image: {e}")
+
+        # Update user profile
+        current_user.profile_image = image_url
+        db.commit()
+        db.refresh(current_user)
+
+        return current_user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in upload_profile_image: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Internal server error during upload: {str(e)}")
+
 
 # ─── User OTP Login ──────────────────────────────────────────
 
@@ -192,7 +250,7 @@ def user_request_otp(request: schemas.UserOtpRequest, db: Session = Depends(data
 
     # If identifier is an email, try sending email
     if "@" in request.identifier:
-        email_sent = send_otp_email(request.identifier, otp)
+        email_sent = send_otp_email(request.identifier, otp, subject="Your Login OTP")
         if email_sent:
             return {"message": "OTP sent to your email. Please check your inbox."}
             
@@ -261,7 +319,7 @@ def admin_request_otp(request: AdminOtpRequest, db: Session = Depends(database.g
     }
 
     # Send OTP via email (falls back to console if SMTP not configured)
-    email_sent = send_otp_email(request.email, otp)
+    email_sent = send_otp_email(request.email, otp, subject="Admin Login OTP")
 
     if email_sent:
         return {"message": "OTP sent to your email. Please check your inbox."}
@@ -317,7 +375,7 @@ def forgot_password_request_otp(request: ForgotPasswordRequest, db: Session = De
         "otp": otp,
         "expires": time.time() + 300  # 5 minutes
     }
-    email_sent = send_otp_email(request.email, otp)
+    email_sent = send_otp_email(request.email, otp, subject="Password Reset OTP")
     if email_sent:
         return {"message": "OTP sent to your email. Please check your inbox."}
     else:

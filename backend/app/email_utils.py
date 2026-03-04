@@ -13,10 +13,10 @@ SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 
 
-def send_otp_email(to_email: str, otp: str):
-    """Send OTP code code via Email."""
+def send_otp_email(to_email: str, otp: str, subject: str = "Your Login OTP"):
+    """Send OTP code via Email."""
     msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"Your Admin Login OTP: {otp}"
+    msg["Subject"] = f"{subject}: {otp}"
     msg["From"] = SMTP_FROM
     msg["To"] = to_email
 
@@ -58,12 +58,12 @@ def send_otp_email(to_email: str, otp: str):
             # 2. Otherwise use a custom name with the default Resend onboarding email
             from_address = SMTP_FROM
             if "onboarding@resend.dev" not in from_address and "@resend.com" not in from_address and "@resend.dev" not in from_address:
-                from_address = "Satvara 32 Samaj <onboarding@resend.dev>"
+                from_address = "શ્રી સથવારા કડિયા પ્રગતિ મંડળ <onboarding@resend.dev>"
 
             params = {
                 "from": from_address,
                 "to": to_email,
-                "subject": f"Your Admin Login OTP: {otp}",
+                "subject": f"Your Login OTP: {otp}",
                 "html": html,
             }
             resend.Emails.send(params)

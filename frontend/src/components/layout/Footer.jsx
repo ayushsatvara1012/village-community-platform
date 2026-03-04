@@ -14,10 +14,10 @@ export function Footer() {
                                 alt="Logo"
                                 className="w-10 h-10 object-contain brightness-0 invert"
                             />
-                            <span className="font-bold font-gujarati text-2xl text-white">સતવારા <span className='text-orange-500'>૩૨</span> સમાજ</span>
+                            <span className="font-bold font-gujarati text-2xl text-white">પ્રગતિ<span className='text-orange-500'> મંડળ</span>, અમદાવાદ</span>
                         </Link>
                         <p className="text-sm leading-relaxed">
-                            Dedicated to the progress and unity of the Satvara community. Building a stronger future together through education, social work, and mutual support.
+                            Dedicated to the progress and unity of the Satvara community (Ahmedabad). Building a stronger future together through education, social work, and mutual support.
                         </p>
                         <div className="flex gap-4">
                             <a href="#" className="hover:text-white transition-colors">
@@ -68,14 +68,14 @@ export function Footer() {
                             </li>
                             <li className="flex gap-3">
                                 <Mail className="w-5 h-5 text-orange-500 shrink-0" />
-                                <span>contact@satvarasamaj32.org</span>
+                                <span>contact@pragatimandal.org</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
                 <div className="pt-8 border-t border-gray-800 text-center text-xs">
-                    <p>&copy; {new Date().getFullYear()} Satvara 32 Samaj. All rights reserved. Designed with ❤️ for the community.</p>
+                    <p>&copy; {new Date().getFullYear()} Satvara Kadia Pragati Mandal. All rights reserved. Designed with ❤️ for the community.</p>
                 </div>
             </div>
         </footer>

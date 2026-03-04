@@ -4,13 +4,15 @@ import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users, Loader2, Mail, Phone, Briefcase, MapPin, ChevronDown, ChevronRight, ArrowLeft, X,
-    RotateCcw, Plus, Trash2
+    Users, User, Loader2, Mail, Phone, Briefcase, MapPin, ChevronDown, ChevronRight, ArrowLeft, X,
+    RotateCcw, Plus, Trash2, ShieldCheck
 } from 'lucide-react';
+import { API_URL } from '../config';
+import { dicebearUrl, getAvatarOptions, initialsUrl, getFullImageUrl } from '../utils/avatar';
 
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com');
+// API_URL is now centralized in src/config.js
 
-function TreeNode({ node, depth = 0, onDelete }) {
+function TreeNode({ node, depth = 0 }) {
     const [expanded, setExpanded] = useState(true);
     const hasChildren = node.children && node.children.length > 0;
     const isSelf = node.relation === 'Self';
@@ -70,16 +72,6 @@ function TreeNode({ node, depth = 0, onDelete }) {
                     </a>
                 )}
 
-                {/* Delete button (for admins) */}
-                {onDelete && !isSelf && (
-                    <button
-                        onClick={() => onDelete(node.id)}
-                        className="absolute -top-2 -right-2 w-7 h-7 bg-white dark:bg-gray-700 border border-gray-100 dark:border-gray-600 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg active:scale-95"
-                        title="Remove member"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                )}
 
                 {/* Expand toggle */}
                 {hasChildren && (
@@ -107,7 +99,7 @@ function TreeNode({ node, depth = 0, onDelete }) {
                                     </div>
                                 )}
                                 <div className="w-0.5 h-8 bg-gray-300 dark:bg-gray-600 z-10"></div>
-                                <TreeNode node={child} depth={depth + 1} onDelete={onDelete} />
+                                <TreeNode node={child} depth={depth + 1} />
                             </div>
                         ))}
                     </div>
@@ -139,12 +131,13 @@ export default function MemberProfile() {
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         try {
-            const date = new Date(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
-            const d = date.getDate().toString().padStart(2, '0');
-            const m = (date.getMonth() + 1).toString().padStart(2, '0');
-            const y = date.getFullYear();
-            return `${d}/${m}/${y}`;
+            const cleanDate = dateStr.split('T')[0];
+            const parts = cleanDate.split('-');
+            if (parts.length === 3) {
+                const [y, m, d] = parts;
+                return `${d}/${m}/${y}`;
+            }
+            return dateStr;
         } catch (e) {
             return dateStr;
         }
@@ -161,7 +154,15 @@ export default function MemberProfile() {
             if (!memberRes.ok) throw new Error('Failed to load member profile');
 
             const memberData = await memberRes.json();
-            memberData.photo = `https://api.dicebear.com/7.x/avataaars/svg?seed=${memberData.id}`;
+
+            // Priority: profile_image > avatar_style > default
+            if (memberData.profile_image) {
+                memberData.photo = getFullImageUrl(memberData.profile_image);
+            } else if (memberData.avatar_style) {
+                memberData.photo = dicebearUrl(memberData.avatar_style, getAvatarOptions(memberData.avatar_style));
+            } else {
+                memberData.photo = initialsUrl(memberData.full_name || memberData.id.toString());
+            }
 
             setMember(memberData);
 
@@ -179,20 +180,6 @@ export default function MemberProfile() {
         fetchProfileData();
     }, [id]);
 
-    const handleDelete = async (memberId) => {
-        if (!confirm('Remove this family member?')) return;
-        try {
-            const res = await fetch(`${API_URL}/family/${memberId}`, { method: 'DELETE', headers });
-            if (res.ok) {
-                await fetchProfileData();
-            } else {
-                const err = await res.json();
-                alert(`Failed to delete: ${err.detail || 'Unknown error'}`);
-            }
-        } catch (err) {
-            console.error('Delete failed:', err);
-        }
-    };
 
     const handleTouchStart = (e) => {
         if (e.touches.length === 2) {
@@ -224,7 +211,6 @@ export default function MemberProfile() {
         setDragPosition({ x: 0, y: 0 });
     };
 
-    const canDelete = currentUser && (currentUser.role === 'admin' || currentUser.id === parseInt(id));
 
     if (loading) {
         return <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900"><Loader2 className="w-10 h-10 animate-spin text-blue-600" /></div>;
@@ -258,13 +244,16 @@ export default function MemberProfile() {
 
                 {/* Profile Header */}
                 <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl overflow-hidden mb-12 border border-white dark:border-gray-700/50 relative">
-                    <div className="h-48 sm:h-64 bg-linear-to-r from-blue-600 to-indigo-700 relative overflow-hidden">
+                    <div className="h-48 sm:h-30 bg-linear-to-r from-blue-600 to-indigo-700 relative overflow-hidden">
                         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                         <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent"></div>
+                        <span className="absolute left-10 top-5 px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
+                            {member.status}
+                        </span>
                     </div>
 
                     <div className="relative px-6 sm:px-10 lg:px-12 pb-10">
-                        <div className="-mt-20 sm:-mt-24 flex flex-col lg:flex-row items-center lg:items-end gap-6 lg:gap-10">
+                        <div className="-mt-20 sm:-mt-10 flex flex-col lg:flex-row items-center gap-6 lg:gap-10">
                             <div className="relative group">
                                 <motion.div whileHover={{ scale: 1.02 }} className="relative">
                                     <img
@@ -276,17 +265,20 @@ export default function MemberProfile() {
                                 </motion.div>
                             </div>
 
-                            <div className="text-center lg:text-left flex-1 pt-4 self-center lg:self-end">
-                                <div className="flex flex-col lg:flex-row items-center lg:items-baseline gap-3 mb-2">
-                                    <h1 className="text-4xl sm:text-5xl font-black text-black dark:text-white tracking-tight leading-none">
+                            <div className="text-start lg:text-left flex-1  pt-8 justify-between">
+                                <div className="flex flex-col lg:flex-row items-center lg:items-baseline gap-3 mb-5">
+                                    <h1 className="text-4xl text-center lg:text-left sm:text-4xl font-black text-black dark:text-white tracking-tight leading-none">
                                         {member.full_name}
                                     </h1>
-                                    <span className="px-3 py-1 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
-                                        MEMBER
-                                    </span>
+                                    {member.position && (
+                                        <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-600 dark:bg-blue-500 rounded-lg shadow-lg shadow-blue-500/20 transform hover:scale-105 transition-transform duration-200">
+                                            <ShieldCheck className="w-4 h-4 text-white" />
+                                            <span className="text-xs font-black text-white uppercase tracking-wider">{member.position}</span>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 mt-4 text-sm font-semibold text-gray-500 dark:text-gray-400">
+                                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-3 text-sm font-semibold text-gray-500 dark:text-gray-400">
                                     <span className="flex items-center gap-2 group cursor-default">
                                         <Mail className="w-4 h-4 text-blue-500" />
                                         {member.email}
@@ -370,7 +362,7 @@ export default function MemberProfile() {
                                     style={{ transformOrigin: 'center center' }}
                                 >
                                     <div className="min-w-fit flex flex-col items-center justify-center">
-                                        <TreeNode node={tree} onDelete={canDelete ? handleDelete : undefined} />
+                                        <TreeNode node={tree} />
                                     </div>
                                 </motion.div>
 

@@ -1,9 +1,12 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { useState, useEffect } from 'react';
 import { Button } from '../components/ui/Button';
 import { IndianRupee, Users, TrendingUp, Download, CheckCircle, XCircle, Clock, Loader2, MapPin, Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp, MessageSquare, Filter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 import { FullScreenLoader } from '../components/ui/FullScreenLoader';
+import { DashboardSkeleton, StatsCardSkeleton } from '../components/skeletons/DashboardSkeletons';
+import { initialsUrl } from '../utils/avatar';
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -43,7 +46,7 @@ export default function Dashboard() {
 
     const fetchVillages = () => {
         setIsLoadingVillages(true);
-        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/')
+        fetch(`${API_URL}/villages/`)
             .then(res => res.json())
             .then(data => {
                 setVillages(data);
@@ -56,7 +59,7 @@ export default function Dashboard() {
     const fetchMembers = () => {
         setIsLoadingMembers(true);
         if (token) {
-            fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/', {
+            fetch(`${API_URL}/members/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.ok ? res.json() : [])
@@ -71,7 +74,7 @@ export default function Dashboard() {
     const fetchPending = () => {
         setIsLoadingPending(true);
         if (token) {
-            fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/members/pending', {
+            fetch(`${API_URL}/members/pending`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.ok ? res.json() : [])
@@ -91,7 +94,9 @@ export default function Dashboard() {
         if (filters.month) params.append('month', filters.month);
         if (filters.year) params.append('year', filters.year);
 
-        fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/payments/chart?${params.toString()}`)
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        fetch(`${API_URL}/payments/chart?${params.toString()}`, { headers })
             .then(res => res.json())
             .then(data => setChartData(data))
             .catch(err => console.error("Failed to fetch chart data:", err))
@@ -108,7 +113,7 @@ export default function Dashboard() {
         if (filters.start_date) params.append('start_date', filters.start_date);
         if (filters.end_date) params.append('end_date', filters.end_date);
 
-        fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/payments/recent-donations?${params.toString()}`)
+        fetch(`${API_URL}/payments/recent-donations?${params.toString()}`)
             .then(res => res.json())
             .then(data => {
                 if (offset === 0) {
@@ -134,7 +139,7 @@ export default function Dashboard() {
         fetchMembers();
 
         setIsLoadingStats(true);
-        fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/payments/stats')
+        fetch(`${API_URL}/payments/stats`)
             .then(res => res.json())
             .then(data => setStats(data))
             .catch(err => console.error("Failed to fetch stats:", err))
@@ -161,14 +166,33 @@ export default function Dashboard() {
         fetchDonations(donationsOffset + 10, donationFilter);
     };
 
-    if (isLoadingStats || isLoadingVillages || isLoadingMembers || isLoadingPending) {
-        return <FullScreenLoader message="Loading dashboard data..." />;
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '—';
+        try {
+            const cleanDate = dateStr.split('T')[0];
+            const parts = cleanDate.split('-');
+            if (parts.length === 3) {
+                const [y, m, d] = parts;
+                return `${d}/${m}/${y}`;
+            }
+            return dateStr;
+        } catch (e) {
+            return dateStr;
+        }
+    };
+
+    if (isLoadingStats || isLoadingVillages || isLoadingMembers || (user?.role === 'admin' && isLoadingPending)) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+                <DashboardSkeleton isAdmin={user?.role === 'admin'} />
+            </div>
+        );
     }
 
     const handleApprove = async (memberId) => {
         setActionId(memberId);
         try {
-            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/members/${memberId}/approve`, {
+            const res = await fetch(`${API_URL}/members/${memberId}/approve`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -198,7 +222,7 @@ export default function Dashboard() {
         }
         setActionId(memberId);
         try {
-            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/members/${memberId}/reject`, {
+            const res = await fetch(`${API_URL}/members/${memberId}/reject`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -225,7 +249,7 @@ export default function Dashboard() {
         if (!newVillage.name || !newVillage.district) return;
         setAddingVillage(true);
         try {
-            const res = await fetch((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com') + '/villages/', {
+            const res = await fetch(`${API_URL}/villages/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -251,7 +275,7 @@ export default function Dashboard() {
     const handleEditVillage = async () => {
         if (!editingVillageData.name || !editingVillageData.district) return;
         try {
-            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/villages/${editingVillageId}`, {
+            const res = await fetch(`${API_URL}/villages/${editingVillageId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -275,7 +299,7 @@ export default function Dashboard() {
         if (!confirm('Delete this village?')) return;
         setDeletingVillageId(villageId);
         try {
-            const res = await fetch(`${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:8000' : 'https://village-community-platform.onrender.com'}/villages/${villageId}`, {
+            const res = await fetch(`${API_URL}/villages/${villageId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -299,11 +323,6 @@ export default function Dashboard() {
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
                     <p className="text-gray-500 dark:text-gray-400">Welcome back, {user?.full_name || 'User'}.</p>
                 </div>
-                {user?.status === 'member' && (
-                    <Button variant="outline" className="gap-2">
-                        <Download className="w-4 h-4" /> Download ID Card
-                    </Button>
-                )}
             </div>
 
             {/* Stats Cards */}
@@ -353,7 +372,7 @@ export default function Dashboard() {
 
             <div className={`grid grid-cols-1 ${user?.role === 'admin' ? 'lg:grid-cols-5' : 'lg:grid-cols-1'} gap-6 sm:gap-8`}>
                 {/* Chart */}
-                <div className={`${user?.role === 'admin' ? 'lg:col-span-3' : ''} min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-auto lg:h-[420px]`}>
+                <div className={`${user?.role === 'admin' ? 'lg:col-span-3' : ''} min-w-0 bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col h-[400px] sm:h-[420px]`}>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4 shrink-0">
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white">Donations Trend (INR vs Date)</h3>
                         <div className="flex flex-wrap items-center gap-2">
@@ -367,15 +386,15 @@ export default function Dashboard() {
                                 }}
                             >
                                 <option value="">All Months</option>
-                                <option value="01">Jan</option>
-                                <option value="02">Feb</option>
-                                <option value="03">Mar</option>
-                                <option value="04">Apr</option>
-                                <option value="05">May</option>
-                                <option value="06">Jun</option>
-                                <option value="07">Jul</option>
-                                <option value="08">Aug</option>
-                                <option value="09">Sep</option>
+                                <option value="1">Jan</option>
+                                <option value="2">Feb</option>
+                                <option value="3">Mar</option>
+                                <option value="4">Apr</option>
+                                <option value="5">May</option>
+                                <option value="6">Jun</option>
+                                <option value="7">Jul</option>
+                                <option value="8">Aug</option>
+                                <option value="9">Sep</option>
                                 <option value="10">Oct</option>
                                 <option value="11">Nov</option>
                                 <option value="12">Dec</option>
@@ -420,34 +439,115 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    <div className="w-full flex-1 min-h-[300px] sm:min-h-0">
+                    <div className="w-full flex-1 min-h-0">
                         {isLoadingChart ? (
                             <div className="flex items-center justify-center h-full">
                                 <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
                             </div>
                         ) : chartData.length > 0 ? (
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorOverall" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorPersonal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} strokeOpacity={0.5} />
                                     <XAxis
-                                        dataKey="date"
+                                        dataKey="timestamp"
                                         stroke="#9ca3af"
-                                        fontSize={12}
+                                        fontSize={10}
                                         tickLine={false}
                                         axisLine={false}
                                         tickFormatter={(val) => {
                                             const d = new Date(val);
                                             return `${d.getDate()} ${d.toLocaleString('default', { month: 'short' }).slice(0, 3)}`;
                                         }}
+                                        minTickGap={30}
                                     />
-                                    <YAxis stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${value}`} />
+                                    <YAxis
+                                        stroke="#9ca3af"
+                                        fontSize={10}
+                                        tickLine={false}
+                                        axisLine={false}
+                                        tickFormatter={(value) => `₹${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
+                                    />
                                     <Tooltip
-                                        cursor={{ fill: 'transparent' }}
-                                        contentStyle={{ backgroundColor: '#1f2937', color: '#fff', borderRadius: '8px', border: 'none' }}
-                                        labelFormatter={(label) => new Date(label).toLocaleDateString()}
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                const data = payload[0].payload;
+                                                return (
+                                                    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-xl shadow-xl backdrop-blur-md bg-opacity-95 dark:bg-opacity-95 min-w-[200px]">
+                                                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mb-2 border-b border-gray-100 dark:border-gray-700 pb-1 flex justify-between">
+                                                            <span>{new Date(label).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                            <span className="opacity-50 font-normal">{new Date(label).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                        </p>
+
+                                                        <div className="space-y-2">
+                                                            <div className="flex flex-col">
+                                                                <div className="flex justify-between items-center text-[10px] text-blue-500 font-bold uppercase tracking-wider mb-0.5">
+                                                                    <span>Overall Status</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-end">
+                                                                    <span className="text-[9px] text-gray-400 italic">This Donation:</span>
+                                                                    <span className="text-xs font-bold text-gray-900 dark:text-white">₹{data.donation_amount.toLocaleString()}</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-end mt-0.5">
+                                                                    <span className="text-[9px] text-gray-400 italic">Total Collection:</span>
+                                                                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400">₹{data.amount.toLocaleString()}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex flex-col border-t border-gray-50 dark:border-gray-700 pt-1.5">
+                                                                <div className="flex justify-between items-center text-[10px] text-green-500 font-bold uppercase tracking-wider mb-0.5">
+                                                                    <span>Personal Status</span>
+                                                                </div>
+                                                                <div className="flex justify-between items-end">
+                                                                    <span className="text-[9px] text-gray-400 italic">My Contribution:</span>
+                                                                    <span className="text-xs font-bold text-green-600 dark:text-green-400">₹{data.personal_amount.toLocaleString()}</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
                                     />
-                                    <Bar dataKey="amount" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={40} />
-                                </BarChart>
+                                    <Legend
+                                        verticalAlign="top"
+                                        align="right"
+                                        height={36}
+                                        iconType="circle"
+                                        wrapperStyle={{ fontSize: '10px', paddingBottom: '10px' }}
+                                        formatter={(value) => value === 'amount' ? 'Total Collection' : 'My Total Donations'}
+                                    />
+                                    <Area
+                                        name="amount"
+                                        type="monotone"
+                                        dataKey="amount"
+                                        stroke="#3b82f6"
+                                        strokeWidth={3}
+                                        fill="url(#colorOverall)"
+                                        animationDuration={1500}
+                                        activeDot={{ r: 4, strokeWidth: 0 }}
+                                    />
+                                    <Area
+                                        name="personal_amount"
+                                        type="monotone"
+                                        dataKey="personal_amount"
+                                        stroke="#10b981"
+                                        strokeWidth={3}
+                                        fill="url(#colorPersonal)"
+                                        animationDuration={1500}
+                                        activeDot={{ r: 4, strokeWidth: 0 }}
+                                    />
+                                </AreaChart>
                             </ResponsiveContainer>
                         ) : (
                             <div className="flex items-center justify-center h-full text-gray-400">
@@ -568,9 +668,22 @@ export default function Dashboard() {
                                         <span className="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full capitalize">
                                             {donation.purpose.replace('_', ' ')}
                                         </span>
-                                        <span>
-                                            {new Date(donation.created_at).toLocaleDateString()}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <a
+                                                href={`${API_URL}/payments/${donation.id}/receipt`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                                                title="Download Receipt"
+                                            >
+                                                <Download className="w-3 h-3" />
+                                                <span>Receipt</span>
+                                            </a>
+                                            <span className="text-gray-300 dark:text-gray-600">•</span>
+                                            <span>
+                                                {new Date(donation.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -612,7 +725,7 @@ export default function Dashboard() {
                                         {/* Profile Info */}
                                         <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                                             <img
-                                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random&size=48`}
+                                                src={initialsUrl(member.full_name)}
                                                 alt={member.full_name}
                                                 className="w-12 h-12 rounded-full border-2 border-gray-100 dark:border-gray-700 shrink-0"
                                             />
@@ -629,6 +742,8 @@ export default function Dashboard() {
                                                     <span>{member.phone_number || 'No Phone'}</span>
                                                     <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
                                                     <span className="truncate">{member.profession || '—'}</span>
+                                                    <span className="hidden sm:inline text-gray-300 dark:text-gray-600">•</span>
+                                                    <span className="truncate">{formatDate(member.date_of_birth)}</span>
                                                 </div>
                                             </div>
                                         </div>

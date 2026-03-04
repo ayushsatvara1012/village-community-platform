@@ -70,7 +70,7 @@ export default function Login() {
                 } else {
                     localStorage.removeItem('remembered_identifier');
                 }
-                navigate('/dashboard');
+                navigate('/profile');
             } else if (loginMethod === 'otp') {
                 if (!otpSent) {
                     await handleSendOtp();
@@ -86,7 +86,7 @@ export default function Login() {
                     } else {
                         localStorage.removeItem('remembered_identifier');
                     }
-                    navigate('/dashboard');
+                    navigate('/profile');
                 }
             }
         } catch (err) {
@@ -109,14 +109,14 @@ export default function Login() {
     };
 
     return (
-        <div className="flex-1 flex bg-cover bg-center overflow-hidden relative" style={{ backgroundImage: "url('/Gemini_Generated_Image_pq9366pq9366pq93.png')" }}>
+        <div className="flex-1 flex bg-cover bg-center overflow-hidden relative" style={{ backgroundImage: "url('/vishwakarma.webp')" }}>
             {/* Global dark/blur overlay for readability */}
             <div className="absolute inset-0 bg-gray-900/60 z-0"></div>
 
             {/* Left Side - Text & Intro */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden z-10">
                 <div className="relative z-10 flex flex-col justify-center px-8 xl:px-16 text-white h-full">
-                    <h1 className="text-4xl xl:text-5xl font-gujarati mb-4 xl:mb-6">સતવારા ૩૨ સમાજ </h1>
+                    <h1 className="text-4xl xl:text-5xl font-gujarati mb-4 xl:mb-6">શ્રી સથવારા કડિયા <span className='text-orange-500 font-bold'>પ્રગતિ મંડળ</span></h1>
                     <p className="text-lg xl:text-xl text-blue-100 max-w-lg">
                         Access your community dashboard, connect with members, and stay updated with the latest village news.
                     </p>
