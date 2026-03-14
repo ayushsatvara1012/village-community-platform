@@ -1304,46 +1304,34 @@ export default function Profile() {
                                             </div>
                                             <div className="space-y-1.5">
                                                 <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Birth Date</label>
-                                                <div
-                                                    className="relative group/date h-[54px] sm:h-[66px] cursor-pointer"
-                                                    onClick={() => {
-                                                        try {
-                                                            if (dateInputRef.current?.showPicker) {
-                                                                dateInputRef.current.showPicker();
-                                                            } else {
-                                                                dateInputRef.current?.click();
-                                                            }
-                                                        } catch (err) {
-                                                            dateInputRef.current?.click();
-                                                        }
-                                                    }}
-                                                >
+                                                <div className="relative group/date h-[54px] sm:h-[66px]">
                                                     {/* Visual Layer - Perfectly styled and consistent */}
-                                                    <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-5 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/5 focus-within:ring-4 focus-within:ring-blue-500/10 focus-within:border-blue-500 transition-all font-bold">
+                                                    <div className="absolute inset-0 flex items-center justify-between px-4 sm:px-5 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/5 transition-all font-bold">
                                                         <span className={editProfileData.date_of_birth ? "text-black dark:text-white text-sm" : "text-gray-400 text-sm"}>
                                                             {editProfileData.date_of_birth ? formatDate(editProfileData.date_of_birth) : "DD / MM / YYYY"}
                                                         </span>
                                                         <Calendar className="w-4 h-4 text-gray-400 group-hover/date:text-blue-500 transition-colors" />
                                                     </div>
-                                                    {/* Functional Layer - Transparent, covers the container */}
+                                                    {/* Functional Layer - Native input on top with opacity 0 to capture touch directly */}
                                                     <input
                                                         ref={dateInputRef}
                                                         type="date"
                                                         value={editProfileData.date_of_birth}
                                                         onChange={(e) => setEditProfileData({ ...editProfileData, date_of_birth: e.target.value })}
-                                                        className="absolute inset-0 w-full h-full opacity-0 pointer-events-none z-10"
+                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                     />
                                                 </div>
                                             </div>
-                                            <div className="space-y-1.5 col-span-1 sm:col-span-2">
-                                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
-                                                <input
-                                                    type="text"
-                                                    value={editProfileData.profession}
-                                                    onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
-                                                    className="w-full h-[54px] sm:h-[66px] px-4 sm:px-5 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
-                                                />
-                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1.5 col-span-1 sm:col-span-2">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 ml-1">Profession</label>
+                                            <input
+                                                type="text"
+                                                value={editProfileData.profession}
+                                                onChange={(e) => setEditProfileData({ ...editProfileData, profession: e.target.value })}
+                                                className="w-full h-[54px] sm:h-[66px] px-4 sm:px-5 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-black dark:text-white transition-all font-bold"
+                                            />
                                         </div>
 
                                         <div className="space-y-1.5">
