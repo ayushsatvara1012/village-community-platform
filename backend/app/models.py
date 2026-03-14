@@ -63,7 +63,7 @@ class DonationEvent(Base):
     raised = Column(Float, default=0)
     image = Column(String)
     category = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
 class FamilyMember(Base):
     __tablename__ = "family_members"

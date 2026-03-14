@@ -7,9 +7,10 @@ import { Heart, Share2, Loader2, AlertCircle, HandHeart, HeartHandshake, Upload,
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '../components/ui/Skeleton';
 import { CampaignGridSkeleton } from '../components/skeletons/CampaignCardSkeleton';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function Donate() {
-    const [events, setEvents] = useState([]);
+    const queryClient = useQueryClient();
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [showGeneralDonate, setShowGeneralDonate] = useState(false);
     const [showSpecialDonate, setShowSpecialDonate] = useState(false);
@@ -26,7 +27,6 @@ export default function Donate() {
     const [newEventImage, setNewEventImage] = useState(null);
     const [editingEvent, setEditingEvent] = useState(null);
     const [razorpayReady, setRazorpayReady] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
     // Dynamically load Razorpay SDK
     useEffect(() => {
@@ -49,25 +49,18 @@ export default function Donate() {
 
     // API_URL is now centralized in src/config.js
 
+    const { data: events = [], isLoading } = useQuery({
+        queryKey: ['events'],
+        queryFn: async () => {
+            const res = await fetch(`${API_URL}/events/`);
+            if (!res.ok) throw new Error('Failed to fetch events');
+            return res.json();
+        }
+    });
+
     const fetchEvents = () => {
-        setIsLoading(true);
-        fetch(`${API_URL}/events/`)
-            .then(res => res.json())
-            .then(data => {
-                setEvents(data);
-                setIsLoading(false);
-            })
-            .catch(err => {
-                console.error("Failed to fetch events:", err);
-                setIsLoading(false);
-            });
+        queryClient.invalidateQueries({ queryKey: ['events'] });
     };
-
-    // getImageUrl has been replaced by the centralized getFullImageUrl from ../utils/avatar
-
-    useEffect(() => {
-        fetchEvents();
-    }, []);
 
     const openRazorpayCheckout = (orderData, description, onSuccess) => {
         const token = localStorage.getItem('village_app_token');
@@ -167,9 +160,9 @@ export default function Donate() {
                 }
 
                 const verifyData = await verifyRes.json();
-                setEvents(prev => prev.map(e =>
-                    e.id === selectedEvent.id ? { ...e, raised: verifyData.new_total } : e
-                ));
+                queryClient.setQueryData(['events'], (old) => 
+                    old.map(e => e.id === selectedEvent.id ? { ...e, raised: verifyData.new_total } : e)
+                );
             });
 
         } catch (error) {

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { API_URL } from '../config';
 import { useFamilyTree, useFamilyList, useAddFamilyMember, useDeleteFamilyMember } from '../hooks/useFamily';
+import { getFullImageUrl, dicebearUrl, getAvatarOptions, initialsUrl, DICEBEAR_AVATARS } from '../utils/avatar';
 
 
 
