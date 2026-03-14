@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import { getFullImageUrl } from '../utils/avatar';
 import { Button } from '../components/ui/Button';
-import { Heart, Share2, Loader2, AlertCircle, HandHeart, Plus, Upload, X, CheckCircle } from 'lucide-react';
+import { Heart, Share2, Loader2, AlertCircle, HandHeart, HeartHandshake, Upload, X, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '../components/ui/Skeleton';
 import { CampaignGridSkeleton } from '../components/skeletons/CampaignCardSkeleton';
@@ -508,7 +508,7 @@ export default function Donate() {
                                 </div>
                             </div>
                             <div className="flex-1 text-center md:text-left">
-                                <h2 className="text-2xl md:text-3xl font-bold mb-2">Make a General Donation</h2>
+                                <h2 className="text-2xl md:text-3xl font-bold mb-2">શ્રી સથવારા કડિયા પ્રગતિ મંડળ, અમદાવાદ</h2>
                                 <p className="text-red-100 text-lg max-w-xl">
                                     Support our community with a general contribution. Your donation goes towards village development, healthcare, education, and more.
                                 </p>
@@ -553,13 +553,13 @@ export default function Donate() {
                         <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
                             <div className="shrink-0">
                                 <div className="w-20 h-20 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
-                                    <Plus className="w-10 h-10 text-white" />
+                                    <HeartHandshake className="w-10 h-10 text-white" />
                                 </div>
                             </div>
                             <div className="flex-1 text-center md:text-left">
-                                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                                    <h2 className="text-2xl md:text-3xl font-bold italic">Special Welfare Fund</h2>
-                                    <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/30 rounded text-xs font-bold uppercase tracking-tighter">Fixed Asset Fund</span>
+                                <div className="flex items-center flex-col lg:flex-row justify-center md:justify-start  gap-3 mb-2">
+                                    <h2 className="text-2xl md:text-3xl font-bold italic">સોશિયલ સથવારા કડિયા સેવા ટ્રસ્ટ, અમદાવાદ</h2>
+                                    {/* <span className="px-2 py-0.5 bg-blue-500/30 border border-blue-400/30 rounded text-xs font-bold uppercase tracking-tighter">સોશિયલ સથવારા કડિયા સેવા ટ્રસ્ટ, અમદાવાદ</span> */}
                                 </div>
                                 <p className="text-blue-100 text-lg max-w-xl">
                                     Dedicated fund for community trust and infrastructure development. These contributions are settled into our primary welfare foundation account.
@@ -567,7 +567,7 @@ export default function Donate() {
                             </div>
                             <div className="shrink-0">
                                 <Button
-                                    className="bg-indigo-500 hover:bg-indigo-400 text-white border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/20"
+                                    className="bg-blue-900 hover:bg-blue-400 text-white border-none px-8 py-3 text-lg font-bold shadow-lg shadow-black/20"
                                     onClick={() => { setShowSpecialDonate(true); setDonationAmount(''); setDonationSuccess(false); setError(''); }}
                                 >
                                     <Heart className="w-5 h-5 mr-2 fill-current" />

@@ -1,105 +1,66 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Search, MapPin, ChevronDown, ChevronUp, Briefcase, Edit2, Check, X, Loader2, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import { dicebearUrl, getAvatarOptions, getFullImageUrl } from '../utils/avatar';
+import { useMembers, useUpdateMemberPosition } from '../hooks/useMembers';
+import { useVillages } from '../hooks/useVillages';
 
 export default function Members() {
     const [selectedVillage, setSelectedVillage] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [members, setMembers] = useState([]);
-    const [villages, setVillages] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const { user: currentUser } = useAuth();
     const [editingPosition, setEditingPosition] = useState(null);
     const [selectedPosition, setSelectedPosition] = useState(null);
     const [newPosition, setNewPosition] = useState('');
-    const [isUpdating, setIsUpdating] = useState(false);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    const { data: rawMembers = [], isLoading: loadingMembers } = useMembers();
+    const { data: rawVillages = [], isLoading: loadingVillages } = useVillages();
+    const updatePositionMutation = useUpdateMemberPosition();
 
-    const fetchData = async () => {
-        try {
-            const token = localStorage.getItem('village_app_token');
-            const [membersRes, villagesRes] = await Promise.all([
-                fetch(`${API_URL}/members/`, {
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                }),
-                fetch(`${API_URL}/villages/`)
-            ]);
+    const loading = loadingMembers || loadingVillages;
 
-            if (membersRes.ok && villagesRes.ok) {
-                const membersData = await membersRes.json();
-                const villagesData = await villagesRes.json();
-
-                const enhancedMembers = membersData.map(member => {
-                    let photoUrl;
-
-                    if (member.profile_image) {
-                        photoUrl = getFullImageUrl(member.profile_image);
-                    } else if (member.avatar_style) {
-                        photoUrl = dicebearUrl(member.avatar_style, getAvatarOptions(member.avatar_style));
-                    } else {
-                        photoUrl = dicebearUrl(member.full_name || 'Member');
-                    }
-
-                    return {
-                        ...member,
-                        name: member.full_name, // Map full_name to name
-                        photo: photoUrl,
-                        profession: member.profession || 'Member' // Fallback
-                    };
-                });
-
-                // Calculate member counts for villages locally for now
-                const villageCounts = {};
-                enhancedMembers.forEach(m => {
-                    if (m.village_id) {
-                        villageCounts[m.village_id] = (villageCounts[m.village_id] || 0) + 1;
-                    }
-                });
-
-                const enhancedVillages = villagesData.map(v => ({
-                    ...v,
-                    member_count: villageCounts[v.id] || 0
-                }));
-
-                setMembers(enhancedMembers);
-                setVillages(enhancedVillages);
-            }
-        } catch (error) {
-            console.error("Failed to fetch data:", error);
-        } finally {
-            setLoading(false);
+    // Enhance members with photo URLs and fallbacks
+    const members = rawMembers.map(member => {
+        let photoUrl;
+        if (member.profile_image) {
+            photoUrl = getFullImageUrl(member.profile_image);
+        } else if (member.avatar_style) {
+            photoUrl = dicebearUrl(member.avatar_style, getAvatarOptions(member.avatar_style));
+        } else {
+            photoUrl = dicebearUrl(member.full_name || 'Member');
         }
-    };
+
+        return {
+            ...member,
+            name: member.full_name,
+            photo: photoUrl,
+            profession: member.profession || 'Member'
+        };
+    });
+
+    // Calculate member counts for villages
+    const villageCounts = {};
+    members.forEach(m => {
+        if (m.village_id) {
+            villageCounts[m.village_id] = (villageCounts[m.village_id] || 0) + 1;
+        }
+    });
+
+    const villages = rawVillages.map(v => ({
+        ...v,
+        member_count: villageCounts[v.id] || 0
+    }));
 
     const handleUpdatePosition = async (memberId) => {
         try {
-            setIsUpdating(true);
-            const token = localStorage.getItem('village_app_token');
-            const res = await fetch(`${API_URL}/members/${memberId}/position`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ position: newPosition })
-            });
-
-            if (res.ok) {
-                const updatedUser = await res.json();
-                setMembers(prev => prev.map(m => m.id === memberId ? { ...m, position: updatedUser.position } : m));
-                setEditingPosition(null);
-            }
+            await updatePositionMutation.mutateAsync({ memberId, position: newPosition });
+            setEditingPosition(null);
         } catch (error) {
             console.error("Failed to update position:", error);
-        } finally {
-            setIsUpdating(false);
+            alert(error.message);
         }
     };
 

@@ -1,169 +1,65 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '../components/ui/Button';
 import { IndianRupee, Users, TrendingUp, Download, CheckCircle, XCircle, Clock, Loader2, MapPin, Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp, MessageSquare, Filter } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
-import { FullScreenLoader } from '../components/ui/FullScreenLoader';
 import { DashboardSkeleton, StatsCardSkeleton } from '../components/skeletons/DashboardSkeletons';
 import { initialsUrl } from '../utils/avatar';
+import { useVillages, useAddVillage, useUpdateVillage, useDeleteVillage } from '../hooks/useVillages';
+import { useMembers, usePendingMembers, useApproveMember, useRejectMember } from '../hooks/useMembers';
+import { useStats, useChartData, useDonations } from '../hooks/usePayments';
 
 export default function Dashboard() {
     const { user } = useAuth();
-    const [villageCount, setVillageCount] = useState(0);
-    const [stats, setStats] = useState({ total_collection: 0, current_balance: 0, top_donor: 'N/A' });
-    const [chartData, setChartData] = useState([]);
-    const [pendingMembers, setPendingMembers] = useState([]);
-    const [actionId, setActionId] = useState(null);
-    const [expandedMember, setExpandedMember] = useState(null);
-    const [adminComment, setAdminComment] = useState('');
-    const [villages, setVillages] = useState([]);
-    const [memberCount, setMemberCount] = useState(0);
-    const [newVillage, setNewVillage] = useState({ name: '', district: '' });
-    const [addingVillage, setAddingVillage] = useState(false);
-    const [showAddVillageForm, setShowAddVillageForm] = useState(false);
-    const [deletingVillageId, setDeletingVillageId] = useState(null);
-    const [editingVillageId, setEditingVillageId] = useState(null);
-    const [editingVillageData, setEditingVillageData] = useState({ name: '', district: '' });
-
-    const [recentDonations, setRecentDonations] = useState([]);
-    const [donationsOffset, setDonationsOffset] = useState(0);
-    const [hasMoreDonations, setHasMoreDonations] = useState(true);
-    const [donationFilter, setDonationFilter] = useState({ sort_by: 'date', order: 'desc', start_date: '', end_date: '' });
-    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-    const [chartFilter, setChartFilter] = useState({ start_date: '', end_date: '', month: '', year: new Date().getFullYear().toString() });
-
-    // Loading states for FullScreenLoader
-    const [isLoadingStats, setIsLoadingStats] = useState(true);
-    const [isLoadingVillages, setIsLoadingVillages] = useState(true);
-    const [isLoadingMembers, setIsLoadingMembers] = useState(true);
-    const [isLoadingChart, setIsLoadingChart] = useState(true);
-    const [isLoadingRecent, setIsLoadingRecent] = useState(true);
-    const [isLoadingMoreDonations, setIsLoadingMoreDonations] = useState(false);
-    const [isLoadingPending, setIsLoadingPending] = useState(user?.role === 'admin');
-
     const token = localStorage.getItem('village_app_token');
 
-    const fetchVillages = () => {
-        setIsLoadingVillages(true);
-        fetch(`${API_URL}/villages/`)
-            .then(res => res.json())
-            .then(data => {
-                setVillages(data);
-                setVillageCount(data.length);
-            })
-            .catch(err => console.error("Failed to fetch villages:", err))
-            .finally(() => setIsLoadingVillages(false));
-    };
+    // UI States
+    const [expandedMember, setExpandedMember] = useState(null);
+    const [adminComment, setAdminComment] = useState('');
+    const [newVillage, setNewVillage] = useState({ name: '', district: '' });
+    const [showAddVillageForm, setShowAddVillageForm] = useState(false);
+    const [editingVillageId, setEditingVillageId] = useState(null);
+    const [editingVillageData, setEditingVillageData] = useState({ name: '', district: '' });
+    const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
-    const fetchMembers = () => {
-        setIsLoadingMembers(true);
-        if (token) {
-            fetch(`${API_URL}/members/`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-                .then(res => res.ok ? res.json() : [])
-                .then(data => setMemberCount(Array.isArray(data) ? data.length : 0))
-                .catch(() => setMemberCount(0))
-                .finally(() => setIsLoadingMembers(false));
-        } else {
-            setIsLoadingMembers(false);
-        }
-    };
+    // Filter States
+    const [donationFilter, setDonationFilter] = useState({ sort_by: 'date', order: 'desc', start_date: '', end_date: '' });
+    const [chartFilter, setChartFilter] = useState({ start_date: '', end_date: '', month: '', year: new Date().getFullYear().toString() });
 
-    const fetchPending = () => {
-        setIsLoadingPending(true);
-        if (token) {
-            fetch(`${API_URL}/members/pending`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-                .then(res => res.ok ? res.json() : [])
-                .then(data => setPendingMembers(Array.isArray(data) ? data : []))
-                .catch(() => setPendingMembers([]))
-                .finally(() => setIsLoadingPending(false));
-        } else {
-            setIsLoadingPending(false);
-        }
-    };
+    // Queries
+    const { data: villages = [], isLoading: isLoadingVillages } = useVillages();
+    const { data: memberData = [], isLoading: isLoadingMembers } = useMembers();
+    const { data: stats = { total_collection: 0, current_balance: 0, top_donor: 'N/A' }, isLoading: isLoadingStats } = useStats();
+    const { data: chartData = [], isLoading: isLoadingChart } = useChartData(chartFilter);
+    const {
+        data: donationsData,
+        isLoading: isLoadingRecent,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage: isLoadingMoreDonations
+    } = useDonations(donationFilter);
+    const { data: pendingMembers = [], isLoading: isLoadingPending } = usePendingMembers(user?.role === 'admin');
 
-    const fetchChartData = (filters) => {
-        setIsLoadingChart(true);
-        const params = new URLSearchParams();
-        if (filters.start_date) params.append('start_date', filters.start_date);
-        if (filters.end_date) params.append('end_date', filters.end_date);
-        if (filters.month) params.append('month', filters.month);
-        if (filters.year) params.append('year', filters.year);
+    // Mutations
+    const approveMutation = useApproveMember();
+    const rejectMutation = useRejectMember();
+    const addVillageMutation = useAddVillage();
+    const updateVillageMutation = useUpdateVillage();
+    const deleteVillageMutation = useDeleteVillage();
 
-        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-
-        fetch(`${API_URL}/payments/chart?${params.toString()}`, { headers })
-            .then(res => res.json())
-            .then(data => setChartData(data))
-            .catch(err => console.error("Failed to fetch chart data:", err))
-            .finally(() => setIsLoadingChart(false));
-    };
-
-    const fetchDonations = (offset, filters) => {
-        if (offset === 0) setIsLoadingRecent(true);
-        else setIsLoadingMoreDonations(true);
-
-        const params = new URLSearchParams({ limit: 10, offset });
-        if (filters.sort_by) params.append('sort_by', filters.sort_by);
-        if (filters.order) params.append('order', filters.order);
-        if (filters.start_date) params.append('start_date', filters.start_date);
-        if (filters.end_date) params.append('end_date', filters.end_date);
-
-        fetch(`${API_URL}/payments/recent-donations?${params.toString()}`)
-            .then(res => res.json())
-            .then(data => {
-                if (offset === 0) {
-                    setRecentDonations(data);
-                } else if (data.length > 0) {
-                    setRecentDonations(prev => [...prev, ...data]);
-                }
-
-                if (data.length < 10) setHasMoreDonations(false);
-                else setHasMoreDonations(true);
-
-                setDonationsOffset(offset);
-            })
-            .catch(err => console.error("Failed to fetch donations:", err))
-            .finally(() => {
-                setIsLoadingRecent(false);
-                setIsLoadingMoreDonations(false);
-            });
-    };
-
-    useEffect(() => {
-        fetchVillages();
-        fetchMembers();
-
-        setIsLoadingStats(true);
-        fetch(`${API_URL}/payments/stats`)
-            .then(res => res.json())
-            .then(data => setStats(data))
-            .catch(err => console.error("Failed to fetch stats:", err))
-            .finally(() => setIsLoadingStats(false));
-
-        fetchDonations(0, donationFilter);
-        fetchChartData(chartFilter);
-        if (user?.role === 'admin') {
-            fetchPending();
-        } else {
-            setIsLoadingPending(false);
-        }
-    }, [user?.role]);
+    const memberCount = Array.isArray(memberData) ? memberData.length : 0;
+    const villageCount = villages.length;
+    const recentDonations = donationsData?.pages.flat() || [];
 
     const applyFilter = (key, val) => {
         const newFilters = { ...donationFilter, [key]: val };
         setDonationFilter(newFilters);
-        setDonationsOffset(0);
-        fetchDonations(0, newFilters);
         setShowFilterDropdown(false);
     };
 
     const loadMoreDonations = () => {
-        fetchDonations(donationsOffset + 10, donationFilter);
+        fetchNextPage();
     };
 
     const formatDate = (dateStr) => {
@@ -190,28 +86,12 @@ export default function Dashboard() {
     }
 
     const handleApprove = async (memberId) => {
-        setActionId(memberId);
         try {
-            const res = await fetch(`${API_URL}/members/${memberId}/approve`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ comment: adminComment || 'Application approved' })
-            });
-            if (res.ok) {
-                setPendingMembers(prev => prev.filter(m => m.id !== memberId));
-                setExpandedMember(null);
-                setAdminComment('');
-            } else {
-                const err = await res.json();
-                alert(err.detail || 'Approve failed');
-            }
+            await approveMutation.mutateAsync({ memberId, comment: adminComment });
+            setExpandedMember(null);
+            setAdminComment('');
         } catch (err) {
-            console.error("Approve failed:", err);
-        } finally {
-            setActionId(null);
+            alert(err.message);
         }
     };
 
@@ -220,99 +100,42 @@ export default function Dashboard() {
             alert('Please provide a reason for rejection');
             return;
         }
-        setActionId(memberId);
         try {
-            const res = await fetch(`${API_URL}/members/${memberId}/reject`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ comment: adminComment })
-            });
-            if (res.ok) {
-                setPendingMembers(prev => prev.filter(m => m.id !== memberId));
-                setExpandedMember(null);
-                setAdminComment('');
-            } else {
-                const err = await res.json();
-                alert(err.detail || 'Reject failed');
-            }
+            await rejectMutation.mutateAsync({ memberId, comment: adminComment });
+            setExpandedMember(null);
+            setAdminComment('');
         } catch (err) {
-            console.error("Reject failed:", err);
-        } finally {
-            setActionId(null);
+            alert(err.message);
         }
     };
 
     const handleAddVillage = async () => {
         if (!newVillage.name || !newVillage.district) return;
-        setAddingVillage(true);
         try {
-            const res = await fetch(`${API_URL}/villages/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newVillage)
-            });
-            if (res.ok) {
-                setNewVillage({ name: '', district: '' });
-                setShowAddVillageForm(false);
-                fetchVillages();
-            } else {
-                const err = await res.json();
-                alert(err.detail || 'Failed to add village');
-            }
+            await addVillageMutation.mutateAsync(newVillage);
+            setNewVillage({ name: '', district: '' });
+            setShowAddVillageForm(false);
         } catch (err) {
-            console.error('Add village failed:', err);
-        } finally {
-            setAddingVillage(false);
+            alert(err.message);
         }
     };
 
     const handleEditVillage = async () => {
         if (!editingVillageData.name || !editingVillageData.district) return;
         try {
-            const res = await fetch(`${API_URL}/villages/${editingVillageId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(editingVillageData)
-            });
-            if (res.ok) {
-                setEditingVillageId(null);
-                fetchVillages();
-            } else {
-                const err = await res.json();
-                alert(err.detail || 'Failed to update village');
-            }
+            await updateVillageMutation.mutateAsync({ id: editingVillageId, data: editingVillageData });
+            setEditingVillageId(null);
         } catch (err) {
-            console.error('Update village failed:', err);
+            alert(err.message);
         }
     };
 
     const handleDeleteVillage = async (villageId) => {
         if (!confirm('Delete this village?')) return;
-        setDeletingVillageId(villageId);
         try {
-            const res = await fetch(`${API_URL}/villages/${villageId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                fetchVillages();
-            } else {
-                const err = await res.json();
-                alert(err.detail || 'Failed to delete village');
-            }
+            await deleteVillageMutation.mutateAsync(villageId);
         } catch (err) {
-            console.error('Delete village failed:', err);
-        } finally {
-            setDeletingVillageId(null);
+            alert(err.message);
         }
     };
 
@@ -612,13 +435,13 @@ export default function Dashboard() {
                                                 <input
                                                     type="date"
                                                     className="w-full text-xs p-2 rounded border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
-                                                    value={donationFilter.start_date}
+                                                    value={donationFilter.start_date || ''}
                                                     onChange={e => setDonationFilter(prev => ({ ...prev, start_date: e.target.value }))}
                                                 />
                                                 <input
                                                     type="date"
                                                     className="w-full text-xs p-2 rounded border border-gray-200 dark:border-gray-700 dark:bg-gray-900"
-                                                    value={donationFilter.end_date}
+                                                    value={donationFilter.end_date || ''}
                                                     onChange={e => setDonationFilter(prev => ({ ...prev, end_date: e.target.value }))}
                                                 />
                                             </div>
@@ -637,8 +460,6 @@ export default function Dashboard() {
                                                 onClick={() => {
                                                     const resetFilters = { sort_by: 'date', order: 'desc', start_date: '', end_date: '' };
                                                     setDonationFilter(resetFilters);
-                                                    setDonationsOffset(0);
-                                                    fetchDonations(0, resetFilters);
                                                     setShowFilterDropdown(false);
                                                 }}
                                             >Clear</Button>
@@ -690,7 +511,7 @@ export default function Dashboard() {
                         ) : (
                             <p className="text-sm text-gray-500 text-center py-8">No recent donations yet 🕊️</p>
                         )}
-                        {recentDonations.length > 0 && hasMoreDonations && (
+                        {recentDonations.length > 0 && hasNextPage && (
                             <div className="pt-2 pb-1">
                                 <Button
                                     variant="outline"
@@ -775,9 +596,9 @@ export default function Dashboard() {
                                                     size="sm"
                                                     className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white font-medium px-4 shadow-sm"
                                                     onClick={() => handleApprove(member.id)}
-                                                    disabled={actionId === member.id}
+                                                    disabled={approveMutation.isPending && approveMutation.variables?.memberId === member.id}
                                                 >
-                                                    {actionId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1.5" />}
+                                                    {approveMutation.isPending && approveMutation.variables?.memberId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1.5" />}
                                                     Approve
                                                 </Button>
                                                 <Button
@@ -791,9 +612,9 @@ export default function Dashboard() {
                                                             handleReject(member.id);
                                                         }
                                                     }}
-                                                    disabled={actionId === member.id}
+                                                    disabled={rejectMutation.isPending && rejectMutation.variables?.memberId === member.id}
                                                 >
-                                                    {actionId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-1.5" />}
+                                                    {rejectMutation.isPending && rejectMutation.variables?.memberId === member.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-1.5" />}
                                                     Reject
                                                 </Button>
                                             </div>
@@ -907,11 +728,11 @@ export default function Dashboard() {
                                             {village.member_count === 0 && (
                                                 <button
                                                     onClick={() => handleDeleteVillage(village.id)}
-                                                    disabled={deletingVillageId === village.id}
+                                                    disabled={deleteVillageMutation.isPending && deleteVillageMutation.variables === village.id}
                                                     className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
                                                     title="Delete village"
                                                 >
-                                                    {deletingVillageId === village.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                    {deleteVillageMutation.isPending && deleteVillageMutation.variables === village.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                                                 </button>
                                             )}
                                         </div>

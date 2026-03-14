@@ -318,7 +318,7 @@ def get_payment_receipt(
 
             @page {{
                 size: A4;
-                margin: 0;
+                margin: 5mm;
             }}
 
             body {{
@@ -326,26 +326,29 @@ def get_payment_receipt(
                 background-color: #f0f0f0;
                 display: flex;
                 justify-content: center;
-                padding: 40px 0;
+                padding: 20px 0;
             }}
 
             .receipt-card {{
                 background: white;
-                width: 210mm;
-                min-height: 297mm;
+                width: 95%;
+                max-width: 210mm;
+                min-height: 285mm; /* Reduced slightly to prevent blank 2nd page */
+                height: auto;
                 position: relative;
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                padding: 10mm; /* Outer safety margin */
+                padding: 5mm;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
             }}
 
             .receipt-inner {{
                 width: 100%;
-                height: 100%;
+                flex: 1;
                 border: 2px solid var(--primary);
-                padding: 8mm; /* Inner content padding */
+                padding: 6mm;
                 position: relative;
                 display: flex;
                 flex-direction: column;
@@ -524,51 +527,66 @@ def get_payment_receipt(
                 transform: rotate(-15deg);
             }}
 
-            .bottom-banner {{
-                background: #d35400;
-                color: white;
-                text-align: center;
-                padding: 8px;
-                font-size: 11px;
-                font-weight: 600;
-                margin-top: 20px;
-                border-radius: 4px;
-            }}
-
-            .no-print {{
-                position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                gap: 10px;
-                z-index: 1000;
-            }}
-
-            .btn {{
-                padding: 10px 20px;
-                background: #333;
-                color: white;
-                border: none;
-                border-radius: 30px;
-                font-weight: 700;
-                cursor: pointer;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            }}
-
-            @media print {{
-                body {{ background: white; padding: 0; }}
-                .receipt-card {{
-                    box-shadow: none;
-                    margin: 0;
-                    width: 100%;
+                .bottom-banner {{
+                    background: #d35400;
+                    color: white;
+                    text-align: center;
+                    padding: 8px;
+                    font-size: 11px;
+                    font-weight: 600;
+                    margin-top: 15px; /* Reduced */
+                    border-radius: 4px;
                 }}
-                .no-print {{ display: none; }}
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="receipt-card">
+
+                .no-print {{
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: flex;
+                    gap: 10px;
+                    z-index: 1000;
+                }}
+
+                .btn {{
+                    padding: 10px 20px;
+                    background: #333;
+                    color: white;
+                    border: none;
+                    border-radius: 30px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                }}
+
+                @media screen and (max-width: 600px) {{
+                    body {{ padding: 10px 0; }}
+                    .receipt-card {{ padding: 3mm; }}
+                    .receipt-inner {{ padding: 4mm; }}
+                    .gujarati-head {{ font-size: 20px; }}
+                    .english-head {{ font-size: 11px; }}
+                    .tagline {{ font-size: 10px; }}
+                    .contact-info {{ font-size: 8px; }}
+                    .title-bar {{ font-size: 16px; padding: 4px; }}
+                    .table-section {{ font-size: 10px; }}
+                    .words-row {{ font-size: 10px; margin-bottom: 15px; }}
+                }}
+
+                @media print {{
+                    body {{ background: white; padding: 0; }}
+                    .receipt-card {{
+                        box-shadow: none;
+                        margin: 0;
+                        width: 100%;
+                        max-width: none;
+                        min-height: 0;
+                    }}
+                    .no-print {{ display: none; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="receipt-card">
             <div class="receipt-inner">
                 <header class="header">
                     <div class="logo-circle">

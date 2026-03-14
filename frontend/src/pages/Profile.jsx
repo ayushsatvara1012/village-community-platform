@@ -9,7 +9,8 @@ import {
     ZoomIn, ZoomOut, Check, Upload, RefreshCw, ImageOff, Calendar
 } from 'lucide-react';
 import { API_URL } from '../config';
-import { DICEBEAR_AVATARS, dicebearUrl, getAvatarOptions, initialsUrl, getFullImageUrl } from '../utils/avatar';
+import { useFamilyTree, useFamilyList, useAddFamilyMember, useDeleteFamilyMember } from '../hooks/useFamily';
+
 
 
 const compressImage = (file) => {
@@ -411,24 +412,28 @@ function TreeNode({ node, onDelete, depth = 0 }) {
     );
 }
 
+
 export default function Profile() {
     const { user, refreshUser } = useAuth();
-    const [tree, setTree] = useState(null);
-    const [flatList, setFlatList] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [zoomScale, setZoomScale] = useState(0.85); // Default smaller for better overview
+    const [zoomScale, setZoomScale] = useState(0.85);
     const containerRef = useRef(null);
     const dateInputRef = useRef(null);
     const [lastTouchDistance, setLastTouchDistance] = useState(null);
-
-    // Initial center position (0,0) works well with motion.div relative layout
     const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
 
-    // Add form state
+    // Queries
+    const { data: tree, isLoading: loadingTree } = useFamilyTree();
+    const { data: flatList = [], isLoading: loadingList } = useFamilyList();
+    const loading = loadingTree || loadingList;
+
+    // Mutations
+    const addMemberMutation = useAddFamilyMember();
+    const deleteMemberMutation = useDeleteFamilyMember();
+
     const [newMember, setNewMember] = useState({
         name: '',
         relation: 'Spouse',
@@ -438,7 +443,6 @@ export default function Profile() {
         linked_sabhasad_id: ''
     });
 
-    // Edit profile state
     const [editProfileData, setEditProfileData] = useState({
         full_name: '',
         phone_number: '',
@@ -446,18 +450,16 @@ export default function Profile() {
         profession: '',
         date_of_birth: ''
     });
-    // Avatar selection state — tracks the style/seed string (e.g. "avataaars/Abby")
     const [selectedAvatar, setSelectedAvatar] = useState(null);
-    const [imageType, setImageType] = useState('avatar'); // 'avatar' or 'photo'
+    const [imageType, setImageType] = useState('avatar');
     const [uploadingImage, setUploadingImage] = useState(false);
-    const [cropSrc, setCropSrc] = useState(null);  // dataURL shown in crop modal
-    const [uploadToast, setUploadToast] = useState(null); // { type: 'error'|'success', message }
+    const [cropSrc, setCropSrc] = useState(null);
+    const [uploadToast, setUploadToast] = useState(null);
     const fileInputRef = useRef(null);
     const toastTimerRef = useRef(null);
-    const [rawCropSrc, setRawCropSrc] = useState(null);   // original data URL for re-crop
-    const [cropInitial, setCropInitial] = useState(null); // { scale, pos } passed as props to modal
+    const [rawCropSrc, setRawCropSrc] = useState(null);
+    const [cropInitial, setCropInitial] = useState(null);
 
-    // Display a toast that auto-dismisses after `ms` milliseconds
     const showToast = (type, message, ms = 5000) => {
         if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
         setUploadToast({ type, message });
@@ -470,7 +472,6 @@ export default function Profile() {
     const formatDate = (dateStr) => {
         if (!dateStr) return '';
         try {
-            // Split YYYY-MM-DD or handle ISO string split by T
             const cleanDate = dateStr.split('T')[0];
             const parts = cleanDate.split('-');
             if (parts.length === 3) {
@@ -486,23 +487,7 @@ export default function Profile() {
     const token = localStorage.getItem('village_app_token');
     const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
 
-    const fetchFamily = async () => {
-        try {
-            const [treeRes, listRes] = await Promise.all([
-                fetch(`${API_URL}/family/tree`, { headers }),
-                fetch(`${API_URL}/family/`, { headers })
-            ]);
-            if (treeRes.ok) setTree(await treeRes.json());
-            if (listRes.ok) setFlatList(await listRes.json());
-        } catch (err) {
-            console.error('Failed to fetch family:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchFamily();
         if (user) {
             setEditProfileData({
                 full_name: user.full_name || '',
@@ -511,7 +496,6 @@ export default function Profile() {
                 profession: user.profession || '',
                 date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : ''
             });
-            // Pre-select the user's current avatar if they have one stored
             setSelectedAvatar(user.avatar_style || null);
             setImageType(user.profile_image ? 'photo' : 'avatar');
         }
@@ -528,16 +512,9 @@ export default function Profile() {
                 age: newMember.age ? parseInt(newMember.age) : undefined,
                 linked_sabhasad_id: newMember.linked_sabhasad_id || undefined
             };
-            const res = await fetch(`${API_URL}/family/`, {
-                method: 'POST', headers, body: JSON.stringify(payload)
-            });
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.detail || 'Failed to add family member');
-            }
+            await addMemberMutation.mutateAsync(payload);
             setShowAddModal(false);
             setNewMember({ name: '', relation: 'Spouse', parent_id: null, gender: 'male', age: '', profession: '', linked_sabhasad_id: '' });
-            await fetchFamily();
         } catch (err) {
             setError(err.message);
         } finally {
