@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 import { getFullImageUrl } from '../utils/avatar';
 import { Button } from '../components/ui/Button';
-import { Heart, Share2, Loader2, AlertCircle, HandHeart, HeartHandshake, Upload, X, CheckCircle } from 'lucide-react';
+import { Heart, Share2, Loader2, AlertCircle, HandHeart, HeartHandshake, Upload, X, CheckCircle, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '../components/ui/Skeleton';
 import { CampaignGridSkeleton } from '../components/skeletons/CampaignCardSkeleton';
@@ -647,13 +647,13 @@ export default function Donate() {
 
                                     <div className="mb-6 bg-gray-900/40 p-4 rounded-xl backdrop-blur-md border border-white/10">
                                         <div className="flex justify-between text-sm font-medium mb-2 text-white/90">
-                                            <span>Raised: <span className="text-green-400 font-bold">₹{event.raised.toLocaleString()}</span></span>
-                                            <span>Goal: ₹{event.goal.toLocaleString()}</span>
+                                            <span>Raised: <span className="text-green-400 font-bold">₹{(event.raised || 0).toLocaleString()}</span></span>
+                                            <span>Goal: ₹{(event.goal || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="h-3 bg-gray-800 rounded-full overflow-hidden shadow-inner">
                                             <div
                                                 className="h-full bg-linear-to-r from-green-500 to-emerald-400 shadow-lg relative"
-                                                style={{ width: `${Math.min((event.raised / event.goal) * 100, 100)}%` }}
+                                                style={{ width: `${Math.min(((event.raised || 0) / (event.goal || 1)) * 100, 100)}%` }}
                                             >
                                                 {Math.min((event.raised / event.goal) * 100, 100) >= 100 && (
                                                     <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
